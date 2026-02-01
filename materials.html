@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Αποθήκη Υλικών</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#18181b}::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:4px}</style>
+</head>
+<body class="bg-[#18181b] text-white min-h-screen p-4 font-sans">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-4 mb-6"><a href="index.html" class="bg-gray-800 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-700"><i class="fas fa-arrow-left"></i></a><h1 class="text-2xl font-bold text-yellow-500">Αποθήκη (Spools)</h1></div>
+
+        <div class="bg-[#27272a] p-5 rounded-xl border border-gray-700 mb-6 relative">
+            <h3 class="text-xs font-bold text-gray-400 uppercase mb-3" id="formTitle">Νεο Καρουλι</h3>
+            <input type="hidden" id="editMatId"> <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                <div>
+                    <input type="text" id="mBrand" list="listBrands" placeholder="Μάρκα" class="w-full p-2 rounded bg-gray-900 border border-gray-600 outline-none focus:border-yellow-500 text-sm text-white">
+                    <datalist id="listBrands"></datalist>
+                </div>
+                <div>
+                    <input type="text" id="mType" list="listTypes" placeholder="Είδος" class="w-full p-2 rounded bg-gray-900 border border-gray-600 outline-none focus:border-yellow-500 text-sm text-white">
+                    <datalist id="listTypes"></datalist>
+                </div>
+                <div>
+                    <input type="text" id="mColor" list="listColors" placeholder="Χρώμα" class="w-full p-2 rounded bg-gray-900 border border-gray-600 outline-none focus:border-yellow-500 text-sm text-white">
+                    <datalist id="listColors"></datalist>
+                </div>
+                <input type="number" id="mPrice" placeholder="Τιμή (€)" class="p-2 rounded bg-gray-900 border border-gray-600 outline-none focus:border-yellow-500 text-center text-sm text-white">
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 items-end">
+                <div><label class="text-[10px] text-gray-500">Αρχικό (g)</label><input type="number" id="mWeightInit" value="1000" class="w-full p-2 rounded bg-gray-900 border border-gray-600 text-center text-sm text-white"></div>
+                <div><label class="text-[10px] text-yellow-500 font-bold">Τρέχον (g)</label><input type="number" id="mWeightCurr" placeholder="Υπόλοιπο" class="w-full p-2 rounded bg-gray-900 border border-yellow-600 text-center text-sm text-white font-bold"></div>
+                
+                <div class="flex gap-2">
+                    <button onclick="saveMaterial()" id="btnSave" class="flex-grow bg-yellow-600 p-2 rounded font-bold hover:bg-yellow-500 text-black uppercase text-sm transition"><i class="fas fa-plus mr-2"></i>Προσθηκη</button>
+                    <button onclick="resetForm()" id="btnCancel" class="hidden bg-gray-600 px-3 rounded hover:bg-gray-500"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="qtyDiv" class="absolute top-5 right-5 w-20">
+                <input type="number" id="mQty" value="1" class="w-full p-1 bg-gray-800 border border-gray-600 text-center text-xs rounded text-gray-400" title="Ποσότητα (μόνο για νέα)">
+            </div>
+        </div>
+
+        <div id="materialsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="text-center w-full col-span-3 text-gray-500 animate-pulse">Φόρτωση...</div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        let uniqueBrands=new Set(), uniqueTypes=new Set(), uniqueColors=new Set();
+
+        setTimeout(() => {
+            db.collection('materials').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                const div = document.getElementById('materialsList'); div.innerHTML = "";
+                uniqueBrands.clear(); uniqueTypes.clear(); uniqueColors.clear();
+
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    if(m.brand) uniqueBrands.add(m.brand); if(m.type) uniqueTypes.add(m.type); if(m.color) uniqueColors.add(m.color);
+
+                    const percent = (m.currentWeight / m.initialWeight) * 100;
+                    const colorBar = percent < 20 ? 'bg-red-500' : (percent < 50 ? 'bg-yellow-500' : 'bg-green-500');
+                    const brandTag = m.brand ? `<span class="bg-gray-700 text-[10px] px-1.5 py-0.5 rounded mr-1 text-gray-300 border border-gray-600">${m.brand}</span>` : '';
+                    
+                    // Passing parameters securely to edit function
+                    const editParams = JSON.stringify({
+                        id: doc.id, brand: m.brand, type: m.type, color: m.color, 
+                        price: m.price, init: m.initialWeight, curr: m.currentWeight
+                    }).replace(/"/g, "&quot;");
+
+                    div.innerHTML += `
+                        <div class="bg-[#27272a] p-4 rounded-xl border border-gray-700 relative group hover:border-yellow-500/50 transition shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="mb-1.5">${brandTag}<span class="text-gray-400 text-xs">${m.type}</span></div>
+                                    <h4 class="font-bold text-md text-white leading-tight">${m.color}</h4>
+                                    <div class="text-xs text-gray-400 mt-1 font-mono">${m.price}€ / ${m.initialWeight}g</div>
+                                </div>
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                    <button onclick="editMaterial(${editParams})" class="text-blue-400 hover:text-white bg-gray-800 p-1.5 rounded"><i class="fas fa-pen"></i></button>
+                                    <button onclick="deleteDoc('materials', '${doc.id}')" class="text-red-500 hover:text-white bg-gray-800 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-1.5 mb-1 overflow-hidden border border-gray-700/50">
+                                <div class="${colorBar} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                            <div class="text-right text-[10px] font-bold text-gray-400 mt-1">${Math.round(m.currentWeight)}g / ${m.initialWeight}g</div>
+                        </div>`;
+                });
+                updateDatalist('listBrands', uniqueBrands); updateDatalist('listTypes', uniqueTypes); updateDatalist('listColors', uniqueColors);
+            });
+        }, 1000);
+
+        function updateDatalist(id, set) { const list=document.getElementById(id); list.innerHTML=""; Array.from(set).sort().forEach(val=>list.innerHTML+=`<option value="${val}">`); }
+
+        function editMaterial(data) {
+            document.getElementById('editMatId').value = data.id;
+            document.getElementById('mBrand').value = data.brand;
+            document.getElementById('mType').value = data.type;
+            document.getElementById('mColor').value = data.color;
+            document.getElementById('mPrice').value = data.price;
+            document.getElementById('mWeightInit').value = data.init;
+            document.getElementById('mWeightCurr').value = data.curr;
+            
+            // UI Change
+            document.getElementById('formTitle').innerText = "Επεξεργασια Υλικου";
+            document.getElementById('btnSave').innerHTML = '<i class="fas fa-save mr-2"></i>Αποθηκευση';
+            document.getElementById('btnSave').className = "flex-grow bg-blue-600 p-2 rounded font-bold hover:bg-blue-500 text-white uppercase text-sm transition";
+            document.getElementById('btnCancel').classList.remove('hidden');
+            document.getElementById('qtyDiv').classList.add('hidden'); // Hide Qty on edit
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('editMatId').value = "";
+            document.getElementById('mBrand').value = ""; document.getElementById('mType').value = "";
+            document.getElementById('mColor').value = ""; document.getElementById('mPrice').value = "";
+            document.getElementById('mWeightInit').value = "1000"; document.getElementById('mWeightCurr').value = "";
+            
+            document.getElementById('formTitle').innerText = "Νεο Καρουλι";
+            document.getElementById('btnSave').innerHTML = '<i class="fas fa-plus mr-2"></i>Προσθηκη';
+            document.getElementById('btnSave').className = "flex-grow bg-yellow-600 p-2 rounded font-bold hover:bg-yellow-500 text-black uppercase text-sm transition";
+            document.getElementById('btnCancel').classList.add('hidden');
+            document.getElementById('qtyDiv').classList.remove('hidden');
+        }
+
+        function saveMaterial() {
+            const id = document.getElementById('editMatId').value;
+            const brand = document.getElementById('mBrand').value.toUpperCase().trim();
+            const type = document.getElementById('mType').value.toUpperCase().trim();
+            const color = document.getElementById('mColor').value.toUpperCase().trim();
+            const price = parseFloat(document.getElementById('mPrice').value);
+            const wInit = parseFloat(document.getElementById('mWeightInit').value);
+            const wCurr = parseFloat(document.getElementById('mWeightCurr').value);
+            const qty = parseInt(document.getElementById('mQty').value) || 1;
+
+            if(!color || !price) return alert("Χρώμα και Τιμή υποχρεωτικά!");
+            const fullName = `${brand} ${type} ${color}`.trim();
+            const finalCurrent = !isNaN(wCurr) ? wCurr : wInit;
+
+            const data = {
+                brand, type, color, name: fullName, 
+                price, initialWeight: wInit, currentWeight: finalCurrent,
+                // On update, we don't change createdAt, maybe add updatedAt?
+            };
+
+            if (id) {
+                // UPDATE
+                db.collection('materials').doc(id).update(data).then(() => {
+                    alert("Ενημερώθηκε!");
+                    resetForm();
+                });
+            } else {
+                // ADD (Support Multiple Qty)
+                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                const batch = db.batch();
+                for(let i=0; i<qty; i++) {
+                    const newRef = db.collection('materials').doc();
+                    batch.set(newRef, data);
+                }
+                batch.commit().then(() => {
+                    document.getElementById('mColor').value = ""; // Quick add mode
+                    alert(`Προστέθηκαν ${qty} τεμ.`);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Προσφορές</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#18181b}::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:4px}</style>
+</head>
+<body class="bg-[#18181b] text-white min-h-screen relative font-sans selection:bg-teal-500 selection:text-white">
+
+    <div class="max-w-3xl mx-auto p-4 pb-24">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4 sticky top-0 bg-[#18181b] z-10 pt-2">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="bg-gray-800 w-10 h-10 rounded-full flex justify-center items-center hover:bg-gray-700 transition"><i class="fas fa-arrow-left"></i></a>
+                <h1 class="text-2xl font-bold text-teal-500">Προσφορές</h1>
+            </div>
+            <a href="models.html" class="text-xs text-purple-400 hover:text-white flex items-center gap-1"><i class="fas fa-cubes"></i> Presets DB</a>
+        </div>
+        <div id="quotesList" class="space-y-3"><div class="text-center text-gray-500 py-10 animate-pulse">Φόρτωση...</div></div>
+    </div>
+
+    <button onclick="openNewModal()" class="fixed bottom-6 right-6 w-14 h-14 bg-teal-600 rounded-full flex justify-center items-center shadow-lg hover:scale-110 transition z-20 text-white text-2xl"><i class="fas fa-plus"></i></button>
+
+    <div id="quoteModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 backdrop-blur-sm">
+        <div class="bg-[#27272a] p-5 rounded-2xl w-full max-w-lg border border-gray-700 max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-teal-400" id="modalTitle">Νέα Προσφορά</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <input type="hidden" id="editQuoteId">
+                <div><label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Πελατης</label><select id="selClient" class="w-full p-3 rounded-lg bg-[#202022] border border-gray-600 text-white outline-none focus:border-teal-500"></select></div>
+                
+                <div>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Επιλογη Μοντελου (Preset)</label>
+                    <div class="flex gap-2">
+                        <select id="selModel" class="w-full p-2 rounded bg-[#202022] border border-gray-600 text-sm outline-none focus:border-teal-500" onchange="applyPreset()"><option value="">-- Χειροκίνητη Εισαγωγή --</option></select>
+                        <button onclick="saveAsPreset()" class="bg-purple-600 px-3 rounded text-white hover:bg-purple-500 text-xs shadow-lg whitespace-nowrap"><i class="fas fa-save mr-1"></i> Save Preset</button>
+                    </div>
+                </div>
+
+                <input type="text" id="inpTitle" class="w-full p-2 rounded bg-[#202022] border border-gray-600 outline-none focus:border-teal-500" placeholder="Τίτλος Έργου">
+
+                <div class="bg-gray-800 p-2 rounded-xl border border-teal-900/30">
+                    <div class="text-[10px] text-teal-500 font-bold mb-1 uppercase">Υλικα (AMS & Batch Sum)</div>
+                    <div class="grid grid-cols-3 gap-1 mb-1">
+                        <select id="filterBrand" class="w-full p-1 rounded bg-gray-900 text-xs border border-gray-600 text-gray-300 outline-none" onchange="updateMatFilters('brand')"><option value="">Μάρκα</option></select>
+                        <select id="filterType" class="w-full p-1 rounded bg-gray-900 text-xs border border-gray-600 text-gray-300 outline-none" onchange="updateMatFilters('type')"><option value="">Είδος</option></select>
+                        <select id="filterColor" class="w-full p-1 rounded bg-gray-900 text-xs border border-gray-600 text-gray-300 outline-none" onchange="updateMatFilters('color')"><option value="">Χρώμα</option></select>
+                    </div>
+                    <div class="flex gap-2">
+                        <div id="selectedMatInfo" class="flex-grow text-[10px] text-gray-400 flex items-center px-1 italic">-- Επίλεξε --</div>
+                        <input type="number" id="addMatGrams" placeholder="g" class="w-14 p-1 rounded bg-gray-900 text-xs text-center border border-gray-600 text-white">
+                        <button onclick="addMaterialRow()" class="bg-teal-600 px-2 rounded text-xs font-bold text-white hover:bg-teal-500 transition">+</button>
+                    </div>
+                    <div id="usedMatsList" class="mt-2 space-y-1"></div>
+                </div>
+
+                <div class="bg-gray-800 p-2 rounded-xl border border-gray-600 shadow-inner">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-teal-500 uppercase">Υπολογισμος Παραγωγης</span>
+                        <label class="text-[10px] flex items-center gap-1 cursor-pointer text-gray-300 select-none"><input type="checkbox" id="isBatch" onchange="toggleBatch()" checked class="accent-teal-500"> BATCH</label>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-1">
+                        <div><label class="text-[9px] text-gray-500 block text-center uppercase">Τεμ/Πλατο</label><input type="number" id="batchPcs" value="1" class="w-full p-1 bg-gray-900 border border-gray-600 text-center text-sm rounded focus:border-teal-500 outline-none font-bold" oninput="calcUnit()"></div>
+                        <div><label class="text-[9px] text-gray-500 block text-center uppercase">Συν. Gr</label><input type="number" id="bGrams" readonly class="w-full p-1 bg-gray-700 border border-gray-600 text-center text-sm rounded text-gray-300 cursor-not-allowed"></div>
+                        <div><label class="text-[9px] text-gray-500 block text-center uppercase">Συν. Min</label><input type="number" id="bMins" class="w-full p-1 bg-gray-900 border border-gray-600 text-center text-sm rounded focus:border-teal-500 outline-none" oninput="calcUnit()"></div>
+                    </div>
+                    <div class="text-center text-xs text-gray-400 bg-gray-900/50 rounded py-1 border border-gray-700 border-dashed">
+                        Ανά τεμάχιο: <span id="resGrams" class="text-white font-bold">0</span>g | <span id="resMins" class="text-white font-bold">0</span>min
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-2 rounded-xl border border-indigo-900/30">
+                    <div class="text-[10px] text-indigo-400 font-bold mb-1 uppercase">Extras</div>
+                    <div class="flex gap-2">
+                        <select id="addExtSel" class="flex-grow p-1 rounded bg-gray-900 text-xs border border-gray-600 text-gray-300"></select>
+                        <button onclick="addExtraRow()" class="bg-indigo-600 px-2 rounded text-xs font-bold text-white hover:bg-indigo-500 transition">+</button>
+                    </div>
+                    <div id="usedExtList" class="mt-2 space-y-1"></div>
+                </div>
+
+                <div class="bg-[#202022] p-4 rounded-xl border border-gray-600 mt-2">
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div><label class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Ζητουμενα Τεμ.</label><input type="number" id="inpQty" value="1" class="w-full p-2 bg-gray-900 border border-gray-600 text-center text-white font-bold rounded focus:border-teal-500 outline-none text-lg" oninput="recalc()"></div>
+                        <div><label class="text-[10px] text-teal-400 font-bold uppercase block mb-1">Τιμη Μοναδας (€)</label><input type="number" id="inpUnitPrice" class="w-full p-2 bg-gray-900 border border-teal-500 text-center text-white font-bold rounded focus:ring-2 ring-teal-500/50 outline-none text-lg" placeholder="0.00" oninput="recalc()"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div class="bg-gray-900/50 p-2 rounded border border-gray-800">
+                            <div class="text-[9px] text-gray-500 uppercase">Κοστος Υλικων & Extras</div>
+                            <div class="text-sm font-bold text-gray-300"><span id="costMatsOnly">0.00</span>€</div>
+                        </div>
+                        <div class="bg-gray-900/50 p-2 rounded border border-gray-800">
+                            <div class="text-[9px] text-gray-500 uppercase">Κοστος Ρευμα/Φθορες</div>
+                            <div class="text-sm font-bold text-gray-300"><span id="costPowerOnly">0.00</span>€</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center mb-2">
+                        <div class="bg-gray-900/50 p-1 rounded"><div class="text-[9px] text-gray-500 uppercase font-bold">ΚΟΣΤΟΣ</div><div class="text-sm font-bold text-red-400"><span id="resTotalCost">0.00</span>€</div></div>
+                        <div class="bg-gray-900/50 p-1 rounded"><div class="text-[9px] text-gray-500 uppercase font-bold">ΚΕΡΔΟΣ</div><div class="text-sm font-bold text-green-400"><span id="resNetProfit">0.00</span>€</div></div>
+                        <div class="bg-gray-900/50 p-1 rounded"><div class="text-[9px] text-gray-500 uppercase font-bold">ROI %</div><div class="text-sm font-bold text-yellow-500"><span id="resMargin">0</span>%</div></div>
+                    </div>
+                    <div class="text-center pt-2 border-t border-gray-700 mt-2">
+                        <div class="text-[10px] text-gray-500 uppercase">Συνολικος Τζιρος</div>
+                        <div class="text-3xl font-extrabold text-white"><span id="resTotalPrice">0.00</span>€</div>
+                    </div>
+                </div>
+
+                <button onclick="saveQuote()" class="w-full bg-teal-600 p-3 rounded-xl font-bold hover:bg-teal-500 transition shadow-lg text-lg text-white uppercase tracking-wide">ΑΠΟΘΗΚΕΥΣΗ ΠΡΟΣΦΟΡΑΣ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        let mats=[], extras=[], currentMats=[], currentExtras=[], loadedPresets={}, selectedSpool=null;
+
+        setTimeout(() => {
+            db.collection('customers').orderBy('name').onSnapshot(s => { const el=document.getElementById('selClient'); el.innerHTML=""; s.forEach(d=>el.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`); });
+            db.collection('materials').onSnapshot(s => { mats=[]; s.forEach(d=>mats.push({...d.data(), id:d.id})); populateFilters(); });
+            db.collection('accessories').onSnapshot(s => { extras=[]; const el=document.getElementById('addExtSel'); el.innerHTML=""; s.forEach(d=>{ extras.push({...d.data(), id:d.id}); el.innerHTML+=`<option value="${d.id}">${d.data().name} (${d.data().cost}€)</option>`; }); });
+            db.collection('print_models').onSnapshot(s => { loadedPresets={}; const el=document.getElementById('selModel'); el.innerHTML='<option value="">-- Preset --</option>'; s.forEach(d=>{ loadedPresets[d.id]=d.data(); el.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`; }); });
+            loadQuotes();
+        }, 1000);
+
+        function loadQuotes() {
+            db.collection('quotes').orderBy('date', 'desc').onSnapshot(snap => {
+                const list = document.getElementById('quotesList'); list.innerHTML = "";
+                if(snap.empty) { list.innerHTML = `<div class="text-center text-gray-600 py-10">Empty</div>`; return; }
+                db.collection('customers').get().then(csnap => {
+                    const cMap = {}; csnap.forEach(c => cMap[c.id] = c.data().name);
+                    snap.forEach(doc => {
+                        const q = doc.data(); const d = q.date ? new Date(q.date.seconds*1000).toLocaleDateString() : '-';
+                        list.innerHTML += `
+                        <div class="bg-[#27272a] p-4 rounded-xl border border-gray-700 shadow flex justify-between items-center group relative overflow-hidden">
+                            <div><div class="text-[10px] text-gray-400 mb-1">${d} • ${cMap[q.clientId]||'Unknown'}</div><div class="font-bold text-white text-lg">${q.title}</div><div class="text-xs text-gray-500">${q.qty} τεμ x ${q.unitPrice}€</div></div>
+                            <div class="text-right flex flex-col items-end gap-2"><div class="text-xl font-bold text-teal-400">${(q.totalPrice||0).toFixed(2)}€</div><div class="flex gap-3 opacity-0 group-hover:opacity-100 transition translate-x-10 group-hover:translate-x-0"><button onclick="convertToOrder('${doc.id}')" class="text-green-500 hover:text-white" title="Μετατροπή"><i class="fas fa-rocket"></i></button><button onclick="editQuote('${doc.id}')" class="text-blue-400 hover:text-white"><i class="fas fa-pen"></i></button><button onclick="deleteDoc('quotes', '${doc.id}')" class="text-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div></div>
+                        </div>`;
+                    });
+                });
+            });
+        }
+
+        function populateFilters() {
+            const brands = [...new Set(mats.map(m => m.brand))].sort();
+            const el = document.getElementById('filterBrand'); el.innerHTML = '<option value="">Μάρκα</option>';
+            brands.forEach(b => el.innerHTML += `<option value="${b}">${b}</option>`);
+            updateMatFilters('brand');
+        }
+        function updateMatFilters(changed) {
+            const b = document.getElementById('filterBrand').value; const t = document.getElementById('filterType').value;
+            if(changed==='brand'){
+                const types = [...new Set(mats.filter(m=>!b || m.brand==b).map(m=>m.type))].sort();
+                document.getElementById('filterType').innerHTML = '<option value="">Είδος</option>' + types.map(x=>`<option value="${x}">${x}</option>`).join('');
+            }
+            if(changed==='brand'||changed==='type'){
+                const colors = mats.filter(m=>(!b||m.brand==b)&&(!t||m.type==t));
+                document.getElementById('filterColor').innerHTML = '<option value="">Χρώμα</option>' + colors.map(m=>`<option value="${m.color}" data-id="${m.id}">${m.color} (${m.price}€)</option>`).join('');
+            }
+            if(changed==='color'){
+                const sel=document.getElementById('filterColor'); const id=sel.options[sel.selectedIndex].getAttribute('data-id');
+                selectedSpool = id ? mats.find(m=>m.id===id) : null;
+                document.getElementById('selectedMatInfo').innerText = selectedSpool ? selectedSpool.name : "--";
+            }
+        }
+        function toggleBatch() { const b=document.getElementById('isBatch').checked; document.getElementById('batchPcs').disabled=!b; if(!b)document.getElementById('batchPcs').value="1"; calcUnit(); }
+        
+        function applyPreset() { 
+            const id = document.getElementById('selModel').value; if(!id || !loadedPresets[id]) return; 
+            const m = loadedPresets[id]; document.getElementById('inpTitle').value = m.name; 
+            document.getElementById('isBatch').checked = true; toggleBatch();
+            document.getElementById('batchPcs').value = m.batchPcs || 1; document.getElementById('bMins').value = m.batchMins || 0; 
+            document.getElementById('inpUnitPrice').value = m.unitPrice || "";
+            currentMats = m.materials ? JSON.parse(JSON.stringify(m.materials)) : []; renderRows(); 
+        }
+
+        function saveAsPreset() {
+            const name = document.getElementById('inpTitle').value; const bPcs = parseFloat(document.getElementById('batchPcs').value);
+            const bGrams = parseFloat(document.getElementById('bGrams').value); const bMins = parseFloat(document.getElementById('bMins').value);
+            if(!name || !bGrams) return alert("Missing Info");
+            db.collection('print_models').add({
+                name: name, batchPcs: bPcs, batchGrams: bGrams, batchMins: bMins,
+                grams: bGrams / bPcs, minutes: bMins / bPcs, unitPrice: parseFloat(document.getElementById('inpUnitPrice').value)||0,
+                materials: currentMats, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => alert("Saved!"));
+        }
+
+        function addMaterialRow() {
+            if(!selectedSpool) return; const g=parseFloat(document.getElementById('addMatGrams').value); if(!g) return;
+            currentMats.push({ id:selectedSpool.id, name:selectedSpool.name, price:selectedSpool.price, grams:g });
+            renderRows(); document.getElementById('addMatGrams').value="";
+        }
+        function addExtraRow() {
+            const id=document.getElementById('addExtSel').value; if(!id) return;
+            const e=extras.find(x=>x.id===id); currentExtras.push({ id:e.id, name:e.name, cost:e.cost }); renderRows();
+        }
+        function renderRows() {
+            document.getElementById('usedMatsList').innerHTML = currentMats.map((m,i)=>`<div class="flex justify-between text-[10px] bg-gray-900 p-1 rounded border border-gray-700 mb-1"><span>${m.name} (${m.grams}g)</span><button onclick="currentMats.splice(${i},1);renderRows()" class="text-red-400">x</button></div>`).join('');
+            document.getElementById('usedExtList').innerHTML = currentExtras.map((e,i)=>`<div class="flex justify-between text-[10px] bg-gray-900 p-1 rounded border border-gray-700 mb-1"><span>${e.name} (${e.cost}€)</span><button onclick="currentExtras.splice(${i},1);renderRows()" class="text-red-400">x</button></div>`).join('');
+            let sumG=0; currentMats.forEach(m=>sumG+=m.grams); document.getElementById('bGrams').value=sumG; calcUnit();
+        }
+        function calcUnit() {
+            const p = parseFloat(document.getElementById('batchPcs').value) || 1;
+            const g = parseFloat(document.getElementById('bGrams').value) || 0;
+            const m = parseFloat(document.getElementById('bMins').value) || 0;
+            document.getElementById('resGrams').innerText = (g/p).toFixed(2);
+            document.getElementById('resMins').innerText = (m/p).toFixed(2);
+            recalc();
+        }
+        function recalc() {
+            const qty=parseFloat(document.getElementById('inpQty').value)||1; 
+            const uprice=parseFloat(document.getElementById('inpUnitPrice').value)||0;
+            const bPcs=parseFloat(document.getElementById('batchPcs').value)||1;
+            
+            // 1. Κόστος Υλικών
+            let mCostBatch=0; 
+            currentMats.forEach(m=>mCostBatch+=(m.grams*(m.price/1000)));
+            let mCostUnit = mCostBatch / bPcs;
+
+            // 2. Κόστος Extras (ανά τεμάχιο)
+            let eCostUnit=0; 
+            currentExtras.forEach(e=>eCostUnit+=e.cost);
+
+            // 3. Κόστος Ρεύματος & Φθορών (0.75€ ανά ώρα εκτύπωσης)
+            const unitMins = parseFloat(document.getElementById('resMins').innerText) || 0;
+            const powerCostUnit = (unitMins / 60) * 0.75;
+
+            // Σύνολα
+            const totalCostUnit = mCostUnit + eCostUnit + powerCostUnit;
+            const totalCostOrder = totalCostUnit * qty;
+            const totalPriceOrder = uprice * qty;
+            const netProfit = totalPriceOrder - totalCostOrder;
+            
+            // UI Update
+            document.getElementById('costMatsOnly').innerText = ((mCostUnit + eCostUnit) * qty).toFixed(2);
+            document.getElementById('costPowerOnly').innerText = (powerCostUnit * qty).toFixed(2);
+            document.getElementById('resTotalCost').innerText = totalCostOrder.toFixed(2);
+            document.getElementById('resTotalPrice').innerText = totalPriceOrder.toFixed(2);
+            document.getElementById('resNetProfit').innerText = netProfit.toFixed(2);
+            
+            let roi = totalCostOrder > 0 ? (netProfit / totalCostOrder) * 100 : 0;
+            const marginEl = document.getElementById('resMargin');
+            marginEl.innerText = Math.round(roi);
+            marginEl.className = roi >= 0 ? "text-sm font-bold text-yellow-500" : "text-sm font-bold text-red-500";
+
+            return { totalCost: totalCostOrder, totalPrice: totalPriceOrder };
+        }
+        function openNewModal() { currentMats=[]; currentExtras=[]; document.getElementById('editQuoteId').value=""; document.getElementById('inpTitle').value=""; document.getElementById('inpQty').value="1"; document.getElementById('inpUnitPrice').value=""; document.getElementById('isBatch').checked=true; toggleBatch(); renderRows(); document.getElementById('quoteModal').classList.remove('hidden'); }
+        function openEditModal() { document.getElementById('quoteModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('quoteModal').classList.add('hidden'); }
+        
+        function saveQuote() {
+            const id=document.getElementById('editQuoteId').value; 
+            const calcData = recalc(); 
+            const qData = {
+                title: document.getElementById('inpTitle').value, 
+                clientId: document.getElementById('selClient').value, 
+                qty: parseFloat(document.getElementById('inpQty').value),
+                unitPrice: parseFloat(document.getElementById('inpUnitPrice').value), 
+                totalPrice: calcData.totalPrice, 
+                totalCost: calcData.totalCost,
+                unitGrams: parseFloat(document.getElementById('resGrams').innerText), 
+                unitMins: parseFloat(document.getElementById('resMins').innerText),
+                batchPcs: parseFloat(document.getElementById('batchPcs').value), 
+                batchGrams: parseFloat(document.getElementById('bGrams').value), 
+                batchMins: parseFloat(document.getElementById('bMins').value),
+                materials: currentMats, 
+                extras: currentExtras, 
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            const action = id ? db.collection('quotes').doc(id).update(qData) : db.collection('quotes').add(qData);
+            action.then(() => closeModal());
+        }
+        function editQuote(id) {
+            db.collection('quotes').doc(id).get().then(doc => {
+                const q = doc.data(); document.getElementById('editQuoteId').value = id; document.getElementById('selClient').value = q.clientId;
+                document.getElementById('inpTitle').value = q.title; document.getElementById('inpQty').value = q.qty; document.getElementById('inpUnitPrice').value = q.unitPrice;
+                if(q.batchPcs > 1) { 
+                    document.getElementById('isBatch').checked = true; 
+                    document.getElementById('batchPcs').value = q.batchPcs; 
+                    document.getElementById('bMins').value = q.batchMins; 
+                } else { 
+                    document.getElementById('isBatch').checked = false; 
+                    toggleBatch(); 
+                }
+                currentMats = q.materials || []; currentExtras = q.extras || []; renderRows(); openEditModal();
+            });
+        }
+        function convertToOrder(id) {
+            if(!confirm("Μετατροπή σε Παραγγελία; Η προσφορά θα αφαιρεθεί.")) return;
+            db.collection('quotes').doc(id).get().then(doc => {
+                const q = doc.data(); const batch = db.batch();
+                const newOrderRef = db.collection('orders').doc();
+                batch.set(newOrderRef, {
+                    description: q.title, clientId: q.clientId, totalPieces: q.qty, completedPieces: 0, 
+                    salePrice: q.totalPrice, unitPrice: q.unitPrice, totalCost: q.totalCost,
+                    batchPcs: q.batchPcs || 1, 
+                    batchGrams: q.batchGrams || 0,
+                    batchMins: q.batchMins || 0,
+                    materials: q.materials || [], extras: q.extras || [], 
+                    status: 'pending', date: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                batch.delete(db.collection('quotes').doc(id));
+                batch.commit().then(() => { alert("Success!"); window.location.href = 'orders.html'; });
+            });
+        }
+    </script>
+</body>
+</html>

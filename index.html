@@ -2,211 +2,110 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bambu Lab Manager</title>
-    
+    <title>Dashboard - Psaradakis 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-color: #1a1a1a; color: #e5e5e5; }
-        
-        /* App Container styles */
-        .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background-color: #262626; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .input-dark { background-color: #333; border: 1px solid #444; color: white; }
-        .input-dark:focus { border-color: #10b981; outline: none; }
-        
-        /* Bambu Lab Green Colors */
-        .accent-text { color: #00AE42; }
-        .accent-bg { background-color: #00AE42; }
-        .accent-border { border-color: #00AE42; }
-    </style>
 </head>
-<body>
+<body class="bg-[#18181b] text-white min-h-screen p-6 font-sans">
 
-<div class="app-container flex flex-col">
-    
-    <div class="bg-black p-4 shadow-md sticky top-0 z-20 flex justify-between items-center border-b border-gray-800">
-        <div class="flex items-center gap-2">
-            <i class="fas fa-cube accent-text text-xl"></i>
-            <h1 class="text-lg font-bold tracking-wide">Bambu<span class="text-white">Manager</span></h1>
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+            <h1 class="text-2xl font-bold italic">Psaradakis<span class="text-green-500">3D</span> Studio</h1>
+            <button onclick="logout()" class="text-gray-400 hover:text-white transition"><i class="fas fa-power-off text-xl"></i></button>
         </div>
-        <button id="logoutBtn" class="hidden text-xs text-gray-400 hover:text-white border border-gray-600 px-2 py-1 rounded">
-            <i class="fas fa-sign-out-alt"></i>
-        </button>
+
+        <div class="bg-[#27272a] p-6 rounded-2xl border border-gray-800 shadow-2xl mb-8 grid grid-cols-3 gap-4 text-center">
+            <div class="border-r border-gray-700">
+                <div class="text-3xl font-bold text-green-500" id="dashActiveCount">-</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Ενεργες Παραγγελιες</div>
+            </div>
+            <div class="border-r border-gray-700">
+                <div class="text-3xl font-bold text-teal-400" id="dashQuotesCount">-</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Εκκρεμεις Προσφορες</div>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-orange-500" id="dashLowStock">-</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Low Stock Alerts</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <a href="quotes.html" class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-teal-500 transition group relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fas fa-file-invoice-dollar text-8xl text-teal-500"></i>
+                </div>
+                <i class="fas fa-file-invoice-dollar text-4xl text-teal-500 mb-4 group-hover:scale-110 transition block"></i>
+                <h2 class="text-2xl font-bold mb-2">Προσφορές</h2>
+                <p class="text-gray-400 text-sm leading-relaxed">Υπολογισμός κόστους, Batch Mode και αρχειοθέτηση προτάσεων πελατών.</p>
+                <div class="mt-6 flex items-center text-teal-400 text-xs font-bold uppercase tracking-wider">
+                    Μεταβαση <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <a href="orders.html" class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-green-500 transition group relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                    <i class="fas fa-boxes-packing text-8xl text-green-500"></i>
+                </div>
+                <i class="fas fa-truck-ramp-box text-4xl text-green-500 mb-4 group-hover:scale-110 transition block"></i>
+                <h2 class="text-2xl font-bold mb-2">Παραγγελίες</h2>
+                <p class="text-gray-400 text-sm leading-relaxed">Διαχείριση παραγωγής, Log Print και αυτόματη ενημέρωση αποθήκης.</p>
+                <div class="mt-6 flex items-center text-green-500 text-xs font-bold uppercase tracking-wider">
+                    Μεταβαση <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="materials.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-yellow-500 transition text-center group">
+                <i class="fas fa-boxes text-yellow-500 mb-2 block group-hover:scale-110 transition"></i>
+                <span class="text-xs font-bold uppercase text-gray-300">Υλικά</span>
+            </a>
+            <a href="clients.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-blue-500 transition text-center group">
+                <i class="fas fa-users text-blue-500 mb-2 block group-hover:scale-110 transition"></i>
+                <span class="text-xs font-bold uppercase text-gray-300">Πελάτες</span>
+            </a>
+            <a href="models.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-purple-500 transition text-center group">
+                <i class="fas fa-cube text-purple-500 mb-2 block group-hover:scale-110 transition"></i>
+                <span class="text-xs font-bold uppercase text-gray-300">Μοντέλα</span>
+            </a>
+            <a href="accessories.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition text-center group">
+                <i class="fas fa-microchip text-indigo-500 mb-2 block group-hover:scale-110 transition"></i>
+                <span class="text-xs font-bold uppercase text-gray-300">Extras</span>
+            </a>
+        </div>
     </div>
 
-    <div id="mainContent" class="flex-grow p-4 relative overflow-y-auto">
-        
-        <div id="loginView" class="flex flex-col justify-center items-center h-[70vh]">
-            <div class="bg-[#333] p-8 rounded-xl shadow-lg w-full border border-gray-700">
-                <div class="text-center mb-6">
-                    <i class="fas fa-fingerprint text-4xl accent-text mb-2"></i>
-                    <h2 class="text-xl font-bold">Ασφαλής Είσοδος</h2>
-                    <p class="text-xs text-gray-400">Διαχείριση Εκτυπώσεων & Πελατών</p>
-                </div>
-                
-                <input type="email" id="emailInput" placeholder="Email" class="w-full p-3 mb-3 rounded input-dark">
-                <input type="password" id="passInput" placeholder="Κωδικός" class="w-full p-3 mb-6 rounded input-dark">
-                
-                <button onclick="handleLogin()" class="w-full accent-bg text-white font-bold p-3 rounded hover:opacity-90 transition">
-                    ΕΙΣΟΔΟΣ
-                </button>
-                <p id="loginMsg" class="text-red-400 text-sm mt-4 text-center min-h-[20px]"></p>
-            </div>
-        </div>
-
-        <div id="dashboardView" class="hidden space-y-4">
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-[#333] p-4 rounded-lg border border-gray-700">
-                    <p class="text-xs text-gray-400">Ενεργές Παραγγελίες</p>
-                    <h3 class="text-2xl font-bold text-white">0</h3>
-                </div>
-                <div class="bg-[#333] p-4 rounded-lg border border-gray-700">
-                    <p class="text-xs text-gray-400">Μηνιαίο Κέρδος</p>
-                    <h3 class="text-2xl font-bold accent-text">0.00 €</h3>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mt-4">
-                <button onclick="alert('Επόμενο βήμα: Πελατολόγιο')" class="bg-[#333] p-5 rounded-xl border border-gray-700 flex flex-col items-center gap-2 hover:border-[#00AE42] transition">
-                    <i class="fas fa-users text-2xl text-blue-400"></i>
-                    <span class="text-sm font-medium">Πελάτες</span>
-                </button>
-                
-                <button onclick="alert('Επόμενο βήμα: Νέα Παραγγελία')" class="bg-[#333] p-5 rounded-xl border border-gray-700 flex flex-col items-center gap-2 hover:border-[#00AE42] transition">
-                    <i class="fas fa-plus-circle text-2xl accent-text"></i>
-                    <span class="text-sm font-medium">Νέα Παραγγελία</span>
-                </button>
-
-                <button onclick="alert('Επόμενο βήμα: Αποθήκη Υλικών')" class="bg-[#333] p-5 rounded-xl border border-gray-700 flex flex-col items-center gap-2 hover:border-[#00AE42] transition">
-                    <i class="fas fa-boxes text-2xl text-yellow-500"></i>
-                    <span class="text-sm font-medium">Αποθήκη (Spools)</span>
-                </button>
-                
-                <button onclick="alert('Επόμενο βήμα: Υπολογιστής Κόστους')" class="bg-[#333] p-5 rounded-xl border border-gray-700 flex flex-col items-center gap-2 hover:border-[#00AE42] transition">
-                    <i class="fas fa-calculator text-2xl text-purple-400"></i>
-                    <span class="text-sm font-medium">Κοστολόγηση</span>
-                </button>
-            </div>
-            
-            <div class="bg-[#333] p-4 rounded-lg border border-gray-700 mt-4">
-                <h3 class="text-sm font-bold text-gray-300 mb-3"><i class="fas fa-robot mr-2"></i>Κατάσταση P1S</h3>
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs text-gray-400">P1S #1 (Left)</span>
-                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">Idle</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-400">P1S #2 (Right)</span>
-                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">Idle</span>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-</div>
-
-<script>
-    // --- ΡΥΘΜΙΣΕΙΣ FIREBASE (Τα δικά σου στοιχεία) ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyDDTvDeVwjAU_pNN-4J5bJPjfFDkjmBreY",
-      authDomain: "dprinting-business-gr.firebaseapp.com",
-      projectId: "dprinting-business-gr",
-      storageBucket: "dprinting-business-gr.firebasestorage.app",
-      messagingSenderId: "119615146681",
-      appId: "1:119615146681:web:5df595f483602f240fe968"
-    };
-
-    // Initialize Firebase
-    let auth, db;
-    try {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-        console.log("Firebase initialized successfully");
-    } catch (e) {
-        console.error("Firebase Init Error:", e);
-        document.getElementById('loginMsg').innerText = "Σφάλμα σύνδεσης με τη βάση.";
-    }
-
-    // UI Elements
-    const loginView = document.getElementById('loginView');
-    const dashboardView = document.getElementById('dashboardView');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const emailInput = document.getElementById('emailInput');
-    const passInput = document.getElementById('passInput');
-    const loginMsg = document.getElementById('loginMsg');
-
-    // Auth Listener - Ελέγχει αν είσαι συνδεδεμένος
-    if (auth) {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log("Logged in as:", user.email);
-                showDashboard();
-            } else {
-                console.log("No user logged in");
-                showLogin();
-            }
-        });
-    }
-
-    function showLogin() {
-        loginView.classList.remove('hidden');
-        dashboardView.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-        loginMsg.innerText = "";
-    }
-
-    function showDashboard() {
-        loginView.classList.add('hidden');
-        dashboardView.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-    }
-
-    // Login Action
-    function handleLogin() {
-        const email = emailInput.value;
-        const pass = passInput.value;
-
-        if (!email || !pass) {
-            loginMsg.innerText = "Συμπλήρωσε Email και Κωδικό.";
-            return;
-        }
-
-        loginMsg.innerText = "Έλεγχος...";
-        
-        auth.signInWithEmailAndPassword(email, pass)
-            .catch((error) => {
-                // Αν ο χρήστης δεν υπάρχει, ρωτάμε αν θέλει εγγραφή
-                if (error.code === 'auth/user-not-found') {
-                    if(confirm("Δεν βρέθηκε χρήστης με αυτό το email. Θέλεις να δημιουργήσεις νέο λογαριασμό;")) {
-                        auth.createUserWithEmailAndPassword(email, pass)
-                            .then(() => loginMsg.innerText = "Επιτυχία! Μπαίνεις...")
-                            .catch((e) => loginMsg.innerText = "Σφάλμα εγγραφής: " + e.message);
-                    } else {
-                        loginMsg.innerText = "Λάθος στοιχεία.";
-                    }
-                } else if (error.code === 'auth/wrong-password') {
-                     loginMsg.innerText = "Λάθος κωδικός.";
-                } else {
-                    loginMsg.innerText = "Σφάλμα: " + error.message;
-                }
+    <script src="common.js"></script>
+    <script>
+        // Φόρτωση Στατιστικών
+        setTimeout(() => {
+            // Ενεργές Παραγγελίες (Pending + In Progress)
+            db.collection('orders').where('status', 'in', ['pending', 'in_progress']).onSnapshot(snap => {
+                document.getElementById('dashActiveCount').innerText = snap.size;
             });
-    }
 
-    // Logout Action
-    logoutBtn.addEventListener('click', () => {
-        if(confirm("Θέλεις σίγουρα να αποσυνδεθείς;")) {
-            auth.signOut();
+            // Εκκρεμείς Προσφορές
+            db.collection('quotes').onSnapshot(snap => {
+                document.getElementById('dashQuotesCount').innerText = snap.size;
+            });
+
+            // Alerts: Χαμηλό απόθεμα (< 200g στα υλικά ή < 10 στα extras)
+            db.collection('materials').onSnapshot(snapMats => {
+                db.collection('accessories').onSnapshot(snapAccs => {
+                    let low = 0;
+                    snapMats.forEach(d => { if(d.data().currentWeight < 200) low++; });
+                    snapAccs.forEach(d => { if(d.data().stock < 10) low++; });
+                    document.getElementById('dashLowStock').innerText = low;
+                });
+            });
+        }, 1500);
+
+        function logout() {
+            auth.signOut().then(() => { window.location.href = 'login.html'; });
         }
-    });
-
-</script>
+    </script>
 </body>
 </html>
