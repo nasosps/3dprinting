@@ -1,85 +1,163 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Πελάτες</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen p-4">
-    <div class="max-w-3xl mx-auto">
-        <div class="flex items-center gap-4 mb-6"><a href="index.html" class="bg-gray-800 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-700"><i class="fas fa-arrow-left"></i></a><h1 class="text-2xl font-bold text-blue-400">Πελατολόγιο</h1></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px
+        }
 
-        <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex gap-3">
-            <input type="hidden" id="editId"> <input type="text" id="cName" placeholder="Όνομα Πελάτη" class="flex-grow p-2 rounded bg-gray-900 border border-gray-600 text-white focus:border-blue-500 outline-none">
-            <input type="text" id="cPhone" placeholder="Τηλέφωνο" class="flex-grow p-2 rounded bg-gray-900 border border-gray-600 text-white focus:border-blue-500 outline-none">
-            <button id="saveBtn" onclick="saveClient()" class="bg-blue-600 px-4 rounded font-bold hover:bg-blue-500 transition">ΠΡΟΣΘΗΚΗ</button>
-            <button id="cancelBtn" onclick="resetForm()" class="bg-gray-600 px-3 rounded hidden hover:bg-gray-500"><i class="fas fa-times"></i></button>
+        ::-webkit-scrollbar-track {
+            background: #18181b
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px
+        }
+
+        input {
+            font-size: 16px !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#18181b] text-white min-h-screen p-4 font-sans pb-32">
+    <div class="max-w-2xl mx-auto lg:pt-8 pt-20"> <!-- Added pt-20 for mobile header spacing -->
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h1 class="text-3xl font-bold text-blue-500">Πελάτες</h1>
         </div>
 
-        <div id="clientsList" class="space-y-2"><div class="text-center text-gray-500">Φόρτωση...</div></div>
+        <input type="text" id="searchClient" onkeyup="filterClients()" placeholder="🔍 Αναζήτηση πελάτη..."
+            class="w-full p-4 bg-[#27272a] border border-gray-600 rounded-xl text-lg text-white mb-6 outline-none focus:border-blue-500 shadow-inner">
+
+        <div id="clientsList" class="space-y-3"></div>
     </div>
+
+    <div id="clientModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+        <div class="bg-[#27272a] p-6 rounded-2xl w-full max-w-sm border border-gray-700 shadow-2xl">
+            <h3 class="text-xl font-bold text-blue-400 mb-6 text-center" id="modalTitle">Νέος Πελάτης</h3>
+            <input type="hidden" id="editClientId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Ονομα / Επωνυμια</label>
+                    <input type="text" id="cName"
+                        class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-white focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Τηλεφωνο (Προαιρετικο)</label>
+                    <input type="text" id="cPhone"
+                        class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-white focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Email (Προαιρετικο)</label>
+                    <input type="text" id="cEmail"
+                        class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-white focus:border-blue-500 outline-none">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="document.getElementById('clientModal').classList.add('hidden')"
+                    class="flex-1 bg-gray-700 py-3 rounded-xl font-bold text-lg">Άκυρο</button>
+                <button onclick="saveClient()"
+                    class="flex-1 bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500 text-lg shadow-lg">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="openNewClient()"
+        class="fixed bottom-8 right-6 w-16 h-16 bg-blue-600 rounded-full flex justify-center items-center shadow-[0_0_25px_rgba(37,99,235,0.6)] hover:scale-110 transition z-30 text-white text-3xl">
+        <i class="fas fa-plus"></i>
+    </button>
 
     <script src="common.js"></script>
     <script>
-        setTimeout(() => {
-            db.collection('customers').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                const div = document.getElementById('clientsList'); div.innerHTML = "";
-                snap.forEach(doc => {
-                    const c = doc.data();
-                    // Προσθέσαμε το κουμπί Edit που καλεί την editMode()
-                    div.innerHTML += `
-                        <div class="bg-[#27272a] p-4 rounded-xl border border-gray-700 flex justify-between items-center group">
-                            <div><h4 class="font-bold text-lg">${c.name}</h4><div class="text-sm text-gray-400"><i class="fas fa-phone mr-1"></i> ${c.phone || '-'}</div></div>
-                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="editMode('${doc.id}', '${c.name}', '${c.phone}')" class="text-blue-400 hover:text-white p-2"><i class="fas fa-pen"></i></button>
-                                <button onclick="deleteDoc('customers', '${doc.id}')" class="text-red-500 hover:text-white p-2"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>`;
-                });
-            });
-        }, 1000);
+        let allClients = [];
 
-        // Ενεργοποίηση Mode Επεξεργασίας
-        function editMode(id, name, phone) {
-            document.getElementById('editId').value = id;
-            document.getElementById('cName').value = name;
-            document.getElementById('cPhone').value = phone;
-            
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "ΕΝΗΜΕΡΩΣΗ";
-            btn.classList.remove('bg-blue-600'); btn.classList.add('bg-green-600', 'hover:bg-green-500');
-            document.getElementById('cancelBtn').classList.remove('hidden');
+        async function loadClients() {
+            renderSidebar('clients');
+            const list = document.getElementById('clientsList');
+            list.innerHTML = '<div class="text-center text-gray-500 py-5">Φόρτωση...</div>';
+
+            const { data: clients } = await sb.from('customers').select('*').order('name');
+            if (clients) {
+                allClients = clients;
+                renderList(allClients);
+            } else {
+                list.innerHTML = '<div class="text-center text-gray-500">Κανένας πελάτης</div>';
+            }
+        }
+        setTimeout(loadClients, 500);
+
+        function renderList(clients) {
+            const list = document.getElementById('clientsList');
+            list.innerHTML = "";
+            clients.forEach(c => {
+                const editData = JSON.stringify(c).replace(/"/g, "&quot;");
+                list.innerHTML += `
+                <div class="bg-[#27272a] p-4 rounded-xl border border-gray-700 flex justify-between items-center group">
+                    <div>
+                        <div class="font-bold text-lg text-white">${c.name}</div>
+                        <div class="text-sm text-gray-400">${c.phone || '-'}</div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="openEdit(${editData})" class="bg-gray-800 w-10 h-10 rounded-lg text-blue-400 border border-gray-600 flex justify-center items-center"><i class="fas fa-pen"></i></button>
+                        <button onclick="deleteRow('customers', '${c.id}', loadClients)" class="bg-gray-800 w-10 h-10 rounded-lg text-red-500 border border-gray-600 flex justify-center items-center"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function filterClients() {
+            const val = document.getElementById('searchClient').value.toLowerCase();
+            const filtered = allClients.filter(c => c.name.toLowerCase().includes(val));
+            renderList(filtered);
+        }
+
+        function openNewClient() {
+            document.getElementById('editClientId').value = "";
+            document.getElementById('cName').value = "";
+            document.getElementById('cPhone').value = "";
+            document.getElementById('cEmail').value = "";
+            document.getElementById('modalTitle').innerText = "Νέος Πελάτης";
+            document.getElementById('clientModal').classList.remove('hidden');
             document.getElementById('cName').focus();
         }
 
-        function resetForm() {
-            document.getElementById('editId').value = "";
-            document.getElementById('cName').value = "";
-            document.getElementById('cPhone').value = "";
-            
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "ΠΡΟΣΘΗΚΗ";
-            btn.classList.remove('bg-green-600', 'hover:bg-green-500'); btn.classList.add('bg-blue-600');
-            document.getElementById('cancelBtn').classList.add('hidden');
+        function openEdit(c) {
+            document.getElementById('editClientId').value = c.id;
+            document.getElementById('cName').value = c.name;
+            document.getElementById('cPhone').value = c.phone || "";
+            document.getElementById('cEmail').value = c.email || "";
+            document.getElementById('modalTitle').innerText = "Επεξεργασία";
+            document.getElementById('clientModal').classList.remove('hidden');
         }
 
-        function saveClient() {
-            const id = document.getElementById('editId').value;
+        async function saveClient() {
+            const id = document.getElementById('editClientId').value;
             const name = document.getElementById('cName').value;
-            const phone = document.getElementById('cPhone').value;
-            if(!name) return alert("Βάλε όνομα!");
+            if (!name) return showToast("Το όνομα είναι υποχρεωτικό!", 'error');
 
-            const data = { name: name, phone: phone };
+            const data = {
+                name: name,
+                phone: document.getElementById('cPhone').value,
+                email: document.getElementById('cEmail').value
+            };
 
-            // Αν υπάρχει ID κάνουμε Update, αλλιώς Add
-            const action = id ? db.collection('customers').doc(id).update(data) : db.collection('customers').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            
-            action.then(() => { resetForm(); alert(id ? "Ενημερώθηκε!" : "Προστέθηκε!"); });
+            if (id) await sb.from('customers').update(data).eq('id', id);
+            else await sb.from('customers').insert(data);
+
+            document.getElementById('clientModal').classList.add('hidden');
+            loadClients();
         }
     </script>
 </body>
+
 </html>

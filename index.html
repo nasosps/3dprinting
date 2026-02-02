@@ -1,111 +1,92 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - Psaradakis 3D</title>
+    <title>Dashboard - P3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body class="bg-[#18181b] text-white min-h-screen p-6 font-sans">
+    <div class="max-w-6xl mx-auto pt-4 lg:pt-0">
+        <!-- Header removed, using Sidebar -->
 
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
-            <h1 class="text-2xl font-bold italic">Psaradakis<span class="text-green-500">3D</span> Studio</h1>
-            <button onclick="logout()" class="text-gray-400 hover:text-white transition"><i class="fas fa-power-off text-xl"></i></button>
-        </div>
-
-        <div class="bg-[#27272a] p-6 rounded-2xl border border-gray-800 shadow-2xl mb-8 grid grid-cols-3 gap-4 text-center">
+        <div
+            class="bg-[#27272a] p-6 rounded-2xl border border-gray-800 shadow-2xl mb-8 grid grid-cols-3 gap-4 text-center mt-6">
             <div class="border-r border-gray-700">
                 <div class="text-3xl font-bold text-green-500" id="dashActiveCount">-</div>
-                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Ενεργες Παραγγελιες</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Ενεργες Παραγγελιες
+                </div>
             </div>
             <div class="border-r border-gray-700">
                 <div class="text-3xl font-bold text-teal-400" id="dashQuotesCount">-</div>
-                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Εκκρεμεις Προσφορες</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Προσφορες</div>
             </div>
             <div>
                 <div class="text-3xl font-bold text-orange-500" id="dashLowStock">-</div>
-                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Low Stock Alerts</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1">Low Stock</div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <a href="quotes.html" class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-teal-500 transition group relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                    <i class="fas fa-file-invoice-dollar text-8xl text-teal-500"></i>
-                </div>
-                <i class="fas fa-file-invoice-dollar text-4xl text-teal-500 mb-4 group-hover:scale-110 transition block"></i>
+            <a href="quotes.html"
+                class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-teal-500 transition group relative overflow-hidden">
+                <i
+                    class="fas fa-file-invoice-dollar text-4xl text-teal-500 mb-4 group-hover:scale-110 transition block"></i>
                 <h2 class="text-2xl font-bold mb-2">Προσφορές</h2>
-                <p class="text-gray-400 text-sm leading-relaxed">Υπολογισμός κόστους, Batch Mode και αρχειοθέτηση προτάσεων πελατών.</p>
-                <div class="mt-6 flex items-center text-teal-400 text-xs font-bold uppercase tracking-wider">
-                    Μεταβαση <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
-                </div>
+                <div class="mt-6 flex items-center text-teal-400 text-xs font-bold uppercase tracking-wider">Μεταβαση <i
+                        class="fas fa-arrow-right ml-2"></i></div>
             </a>
-
-            <a href="orders.html" class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-green-500 transition group relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                    <i class="fas fa-boxes-packing text-8xl text-green-500"></i>
-                </div>
-                <i class="fas fa-truck-ramp-box text-4xl text-green-500 mb-4 group-hover:scale-110 transition block"></i>
+            <a href="orders.html"
+                class="bg-gray-800 p-8 rounded-2xl border border-gray-700 hover:border-green-500 transition group relative overflow-hidden">
+                <i
+                    class="fas fa-truck-ramp-box text-4xl text-green-500 mb-4 group-hover:scale-110 transition block"></i>
                 <h2 class="text-2xl font-bold mb-2">Παραγγελίες</h2>
-                <p class="text-gray-400 text-sm leading-relaxed">Διαχείριση παραγωγής, Log Print και αυτόματη ενημέρωση αποθήκης.</p>
-                <div class="mt-6 flex items-center text-green-500 text-xs font-bold uppercase tracking-wider">
-                    Μεταβαση <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
-                </div>
+                <div class="mt-6 flex items-center text-green-500 text-xs font-bold uppercase tracking-wider">Μεταβαση
+                    <i class="fas fa-arrow-right ml-2"></i></div>
             </a>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="materials.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-yellow-500 transition text-center group">
-                <i class="fas fa-boxes text-yellow-500 mb-2 block group-hover:scale-110 transition"></i>
-                <span class="text-xs font-bold uppercase text-gray-300">Υλικά</span>
-            </a>
-            <a href="clients.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-blue-500 transition text-center group">
-                <i class="fas fa-users text-blue-500 mb-2 block group-hover:scale-110 transition"></i>
-                <span class="text-xs font-bold uppercase text-gray-300">Πελάτες</span>
-            </a>
-            <a href="models.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-purple-500 transition text-center group">
-                <i class="fas fa-cube text-purple-500 mb-2 block group-hover:scale-110 transition"></i>
-                <span class="text-xs font-bold uppercase text-gray-300">Μοντέλα</span>
-            </a>
-            <a href="accessories.html" class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition text-center group">
-                <i class="fas fa-microchip text-indigo-500 mb-2 block group-hover:scale-110 transition"></i>
-                <span class="text-xs font-bold uppercase text-gray-300">Extras</span>
-            </a>
+            <a href="materials.html"
+                class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-yellow-500 transition text-center group"><i
+                    class="fas fa-boxes text-yellow-500 mb-2 block group-hover:scale-110 transition"></i><span
+                    class="text-xs font-bold uppercase text-gray-300">Υλικά</span></a>
+            <a href="clients.html"
+                class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-blue-500 transition text-center group"><i
+                    class="fas fa-users text-blue-500 mb-2 block group-hover:scale-110 transition"></i><span
+                    class="text-xs font-bold uppercase text-gray-300">Πελάτες</span></a>
+            <a href="models.html"
+                class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-purple-500 transition text-center group"><i
+                    class="fas fa-cube text-purple-500 mb-2 block group-hover:scale-110 transition"></i><span
+                    class="text-xs font-bold uppercase text-gray-300">Μοντέλα</span></a>
+            <a href="accessories.html"
+                class="bg-[#27272a] p-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition text-center group"><i
+                    class="fas fa-microchip text-indigo-500 mb-2 block group-hover:scale-110 transition"></i><span
+                    class="text-xs font-bold uppercase text-gray-300">Extras</span></a>
         </div>
     </div>
 
     <script src="common.js"></script>
     <script>
-        // Φόρτωση Στατιστικών
-        setTimeout(() => {
-            // Ενεργές Παραγγελίες (Pending + In Progress)
-            db.collection('orders').where('status', 'in', ['pending', 'in_progress']).onSnapshot(snap => {
-                document.getElementById('dashActiveCount').innerText = snap.size;
-            });
+        renderSidebar('dashboard');
 
-            // Εκκρεμείς Προσφορές
-            db.collection('quotes').onSnapshot(snap => {
-                document.getElementById('dashQuotesCount').innerText = snap.size;
-            });
+        async function loadStats() {
+            const { count: activeCount } = await sb.from('orders').select('*', { count: 'exact', head: true }).neq('status', 'archived');
+            document.getElementById('dashActiveCount').innerText = activeCount || 0;
 
-            // Alerts: Χαμηλό απόθεμα (< 200g στα υλικά ή < 10 στα extras)
-            db.collection('materials').onSnapshot(snapMats => {
-                db.collection('accessories').onSnapshot(snapAccs => {
-                    let low = 0;
-                    snapMats.forEach(d => { if(d.data().currentWeight < 200) low++; });
-                    snapAccs.forEach(d => { if(d.data().stock < 10) low++; });
-                    document.getElementById('dashLowStock').innerText = low;
-                });
-            });
-        }, 1500);
+            const { count: quoteCount } = await sb.from('quotes').select('*', { count: 'exact', head: true });
+            document.getElementById('dashQuotesCount').innerText = quoteCount || 0;
 
-        function logout() {
-            auth.signOut().then(() => { window.location.href = 'login.html'; });
+            const { data: mats } = await sb.from('materials').select('current_weight');
+            let low = 0;
+            if (mats) mats.forEach(m => { if (m.current_weight < 200) low++; });
+            document.getElementById('dashLowStock').innerText = low;
         }
+        setTimeout(loadStats, 500);
     </script>
 </body>
+
 </html>

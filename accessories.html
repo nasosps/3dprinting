@@ -1,72 +1,150 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Extras</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen p-4">
-    <div class="max-w-3xl mx-auto">
-        <div class="flex items-center gap-4 mb-6"><a href="index.html" class="bg-gray-800 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-700"><i class="fas fa-arrow-left"></i></a><h1 class="text-2xl font-bold text-indigo-400">Extras</h1></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px
+        }
 
-        <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 mb-6 flex gap-3">
-            <input type="hidden" id="editId">
-            <input type="text" id="aName" placeholder="Περιγραφή" class="flex-grow p-2 rounded bg-gray-900 border border-gray-600 text-white focus:border-indigo-500 outline-none">
-            <input type="number" id="aCost" placeholder="Cost €" class="w-24 p-2 rounded bg-gray-900 border border-gray-600 text-white text-center focus:border-indigo-500 outline-none">
-            <input type="number" id="aStock" placeholder="Stock" class="w-20 p-2 rounded bg-gray-900 border border-gray-600 text-white text-center focus:border-indigo-500 outline-none">
-            <button id="saveBtn" onclick="saveAcc()" class="bg-indigo-600 px-4 rounded font-bold hover:bg-indigo-500 transition"><i class="fas fa-save"></i></button>
-            <button id="cancelBtn" onclick="resetForm()" class="bg-gray-600 px-3 rounded hidden hover:bg-gray-500"><i class="fas fa-times"></i></button>
+        ::-webkit-scrollbar-track {
+            background: #18181b
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px
+        }
+
+        input {
+            font-size: 16px !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#18181b] text-white min-h-screen p-4 font-sans pb-32">
+    <div class="max-w-2xl mx-auto lg:pt-8 pt-20"> <!-- Added pt-20 for mobile header spacing -->
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h1 class="text-3xl font-bold text-indigo-500">Extras</h1>
         </div>
 
-        <div id="list" class="space-y-2">Loading...</div>
+        <div id="accList" class="space-y-3"></div>
     </div>
+
+    <div id="accModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+        <div class="bg-[#27272a] p-6 rounded-2xl w-full max-w-sm border border-gray-700 shadow-2xl">
+            <h3 class="text-xl font-bold text-indigo-400 mb-6 text-center" id="modalTitle">Νέο Extra</h3>
+            <input type="hidden" id="editId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Περιγραφη (π.χ. Βιδες
+                        Μ3)</label>
+                    <input type="text" id="aName"
+                        class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-white focus:border-indigo-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Κοστος (€)</label>
+                        <input type="number" id="aCost"
+                            class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-center text-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase font-bold block mb-1">Στοκ</label>
+                        <input type="number" id="aStock"
+                            class="w-full p-4 bg-[#18181b] border border-gray-600 rounded-xl text-lg text-center text-white focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="document.getElementById('accModal').classList.add('hidden')"
+                    class="flex-1 bg-gray-700 py-3 rounded-xl font-bold text-lg">Άκυρο</button>
+                <button onclick="saveAcc()"
+                    class="flex-1 bg-indigo-600 py-3 rounded-xl font-bold hover:bg-indigo-500 text-lg shadow-lg">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="openNewAcc()"
+        class="fixed bottom-8 right-6 w-16 h-16 bg-indigo-600 rounded-full flex justify-center items-center shadow-[0_0_25px_rgba(79,70,229,0.6)] hover:scale-110 transition z-30 text-white text-3xl">
+        <i class="fas fa-plus"></i>
+    </button>
 
     <script src="common.js"></script>
     <script>
-        setTimeout(() => {
-            db.collection('accessories').orderBy('name').onSnapshot(snap => {
-                const l = document.getElementById('list'); l.innerHTML = "";
-                snap.forEach(d => {
-                    const a = d.data();
-                    l.innerHTML += `
-                    <div class="bg-[#27272a] p-3 rounded border border-gray-700 flex justify-between items-center group">
-                        <div><span class="font-bold block">${a.name}</span><span class="text-xs text-gray-400">Cost: ${a.cost}€ | Stock: ${a.stock||0}</span></div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                            <button onclick="editMode('${d.id}', '${a.name}', ${a.cost}, ${a.stock})" class="text-indigo-400 hover:text-white"><i class="fas fa-pen"></i></button>
-                            <button onclick="deleteDoc('accessories','${d.id}')" class="text-red-500 hover:text-white"><i class="fas fa-trash"></i></button>
+        renderSidebar('accessories');
+
+        async function loadAcc() {
+            const list = document.getElementById('accList');
+            list.innerHTML = '<div class="text-center text-gray-500 py-5">Φόρτωση...</div>';
+
+            const { data: accs } = await sb.from('accessories').select('*').order('name');
+            list.innerHTML = "";
+
+            if (accs && accs.length > 0) {
+                accs.forEach(a => {
+                    const editData = JSON.stringify(a).replace(/"/g, "&quot;");
+                    list.innerHTML += `
+                    <div class="bg-[#27272a] p-4 rounded-xl border border-gray-700 flex justify-between items-center group shadow-sm">
+                        <div>
+                            <div class="font-bold text-lg text-white">${a.name}</div>
+                            <div class="text-sm text-indigo-400 font-bold">${a.cost}€ <span class="text-gray-500 font-normal">| Στοκ: ${a.stock || 0}</span></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="openEdit(${editData})" class="bg-gray-800 w-10 h-10 rounded-lg text-indigo-400 border border-gray-600 flex justify-center items-center"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteRow('accessories','${a.id}', loadAcc)" class="bg-gray-800 w-10 h-10 rounded-lg text-red-500 border border-gray-600 flex justify-center items-center"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
                 });
-            });
-        }, 1000);
-
-        function editMode(id, n, c, s) {
-            document.getElementById('editId').value=id; document.getElementById('aName').value=n;
-            document.getElementById('aCost').value=c; document.getElementById('aStock').value=s;
-            const btn = document.getElementById('saveBtn'); btn.innerHTML = "<i class='fas fa-check'></i>";
-            btn.classList.remove('bg-indigo-600'); btn.classList.add('bg-green-600', 'hover:bg-green-500');
-            document.getElementById('cancelBtn').classList.remove('hidden');
-        }
-        function resetForm(){
-            document.getElementById('editId').value=""; document.getElementById('aName').value="";
-            document.getElementById('aCost').value=""; document.getElementById('aStock').value="";
-            const btn = document.getElementById('saveBtn'); btn.innerHTML = "<i class='fas fa-save'></i>";
-            btn.classList.remove('bg-green-600', 'hover:bg-green-500'); btn.classList.add('bg-indigo-600');
-            document.getElementById('cancelBtn').classList.add('hidden');
-        }
-        function saveAcc() {
-            const id=document.getElementById('editId').value; const n=document.getElementById('aName').value;
-            const c=parseFloat(document.getElementById('aCost').value); const s=parseFloat(document.getElementById('aStock').value)||0;
-            if(n) {
-                const data = {name:n, cost:c, stock:s};
-                const action = id ? db.collection('accessories').doc(id).update(data) : db.collection('accessories').add(data);
-                action.then(()=>{ resetForm(); });
+            } else {
+                list.innerHTML = '<div class="text-center text-gray-500">Δεν βρέθηκαν extras.</div>';
             }
+        }
+        setTimeout(loadAcc, 500);
+
+        function openNewAcc() {
+            document.getElementById('editId').value = "";
+            document.getElementById('aName').value = "";
+            document.getElementById('aCost').value = "";
+            document.getElementById('aStock').value = "";
+            document.getElementById('modalTitle').innerText = "Νέο Extra";
+            document.getElementById('accModal').classList.remove('hidden');
+            document.getElementById('aName').focus();
+        }
+
+        function openEdit(a) {
+            document.getElementById('editId').value = a.id;
+            document.getElementById('aName').value = a.name;
+            document.getElementById('aCost').value = a.cost;
+            document.getElementById('aStock').value = a.stock;
+            document.getElementById('modalTitle').innerText = "Επεξεργασία";
+            document.getElementById('accModal').classList.remove('hidden');
+        }
+
+        async function saveAcc() {
+            const id = document.getElementById('editId').value;
+            const n = document.getElementById('aName').value;
+            const c = parseFloat(document.getElementById('aCost').value);
+            const s = parseFloat(document.getElementById('aStock').value) || 0;
+
+            if (!n) return showToast("Βάλε όνομα!", 'error');
+
+            const data = { name: n, cost: c, stock: s };
+
+            if (id) await sb.from('accessories').update(data).eq('id', id);
+            else await sb.from('accessories').insert(data);
+
+            document.getElementById('accModal').classList.add('hidden');
+            loadAcc();
         }
     </script>
 </body>
+
 </html>

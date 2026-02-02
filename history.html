@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ιστορικό</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #18181b
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px
+        }
+    </style>
+</head>
+
+<body class="bg-[#18181b] text-white min-h-screen font-sans pb-32">
+
+    <div class="max-w-6xl mx-auto p-4 lg:pt-8 pt-20">
+        <div class="flex flex-col lg:flex-row justify-between items-center mb-6 border-b border-gray-700 pb-4 gap-4">
+            <h1 class="text-3xl font-bold text-gray-200"><i class="fas fa-history text-gray-500 mr-2"></i>Ιστορικό</h1>
+
+            <div class="flex gap-2 w-full lg:w-auto overflow-x-auto">
+                <select id="filterClient" onchange="loadHistory()"
+                    class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-sm min-w-[150px] outline-none hover:border-teal-500 transition">
+                    <option value="">Όλοι οι Πελάτες</option>
+                </select>
+                <select id="filterType" onchange="loadHistory()"
+                    class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-sm outline-none hover:border-teal-500 transition">
+                    <option value="">Όλα (Quotes & Orders)</option>
+                    <option value="order">Παραγγελίες</option>
+                    <option value="quote">Προσφορές</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-[#27272a] rounded-3xl border border-gray-700 overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-800 text-gray-400 text-xs uppercase tracking-wider">
+                            <th class="p-4 font-bold border-b border-gray-700">Ημ/νια</th>
+                            <th class="p-4 font-bold border-b border-gray-700">Πελατης</th>
+                            <th class="p-4 font-bold border-b border-gray-700">Περιγραφη</th>
+                            <th class="p-4 font-bold border-b border-gray-700">Τυπος</th>
+                            <th class="p-4 font-bold border-b border-gray-700 text-right">Ποσο</th>
+                            <th class="p-4 font-bold border-b border-gray-700 text-center">Κατασταση</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        renderSidebar('history');
+
+        let clientsMap = {};
+
+        async function init() {
+            // Load Clients
+            const { data: clients } = await sb.from('customers').select('id,name').order('name');
+            const cSel = document.getElementById('filterClient');
+            if (clients) {
+                clients.forEach(c => {
+                    clientsMap[c.id] = c.name;
+                    cSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+            }
+            loadHistory();
+        }
+
+        async function loadHistory() {
+            const list = document.getElementById('historyTable');
+            list.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 animate-pulse">Φόρτωση δεδομένων...</td></tr>';
+
+            const fClient = document.getElementById('filterClient').value;
+            const fType = document.getElementById('filterType').value;
+
+            // Fetch Quotes
+            let qQuery = sb.from('quotes').select('id, created_at, client_id, title, total_price, status');
+            if (fClient) qQuery = qQuery.eq('client_id', fClient);
+            const { data: quotes } = await qQuery;
+
+            // Fetch Orders
+            let oQuery = sb.from('orders').select('id, created_at, client_id, description, sale_price, status');
+            if (fClient) oQuery = oQuery.eq('client_id', fClient);
+            const { data: orders } = await oQuery;
+
+            // Merge & Transform
+            let allItems = [];
+
+            if (quotes && (fType === '' || fType === 'quote')) {
+                quotes.forEach(q => allItems.push({
+                    date: new Date(q.created_at),
+                    type: 'quote',
+                    clientId: q.client_id,
+                    desc: q.title,
+                    amount: q.total_price,
+                    status: 'Draft' // Quotes dont really have status in DB yet usually
+                }));
+            }
+
+            if (orders && (fType === '' || fType === 'order')) {
+                orders.forEach(o => allItems.push({
+                    date: new Date(o.created_at),
+                    type: 'order',
+                    clientId: o.client_id,
+                    desc: o.description,
+                    amount: o.sale_price,
+                    status: o.status
+                }));
+            }
+
+            // Sort DESC
+            allItems.sort((a, b) => b.date - a.date);
+
+            // Render
+            list.innerHTML = "";
+            if (allItems.length === 0) {
+                list.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">Δεν βρέθηκαν εγγραφές.</td></tr>';
+                return;
+            }
+
+            allItems.forEach(item => {
+                const dateStr = item.date.toLocaleDateString();
+                const cName = clientsMap[item.clientId] || 'Unknown';
+                const typeBadge = item.type === 'order'
+                    ? '<span class="px-2 py-1 rounded bg-green-900/50 text-green-400 text-xs font-bold border border-green-700">ORDER</span>'
+                    : '<span class="px-2 py-1 rounded bg-teal-900/50 text-teal-400 text-xs font-bold border border-teal-700">QUOTE</span>';
+
+                const statusColor = item.status === 'completed' || item.status === 'archived' ? 'text-gray-500 line-through' : 'text-white';
+
+                list.innerHTML += `
+                <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                    <td class="p-4 text-gray-400 font-mono">${dateStr}</td>
+                    <td class="p-4 font-bold text-gray-300">${cName}</td>
+                    <td class="p-4 ${statusColor}">${item.desc}</td>
+                    <td class="p-4">${typeBadge}</td>
+                    <td class="p-4 text-right font-mono font-bold text-gray-200">${(item.amount || 0).toFixed(2)}€</td>
+                    <td class="p-4 text-center text-xs text-gray-500 uppercase">${item.status}</td>
+                </tr>`;
+            });
+        }
+
+        setTimeout(init, 500);
+
+    </script>
+</body>
+
+</html>
