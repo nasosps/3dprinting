@@ -248,57 +248,76 @@
 
     <script src="common.js"></script>
     <script>
+        // Global Error Handler
+        window.onerror = function (message, source, lineno, colno, error) {
+            alert("JS Error: " + message + "\nLine: " + lineno);
+        };
+
         let mats = [], extras = [], currentMats = [], currentExtras = [], loadedPresets = {}, selectedSpool = null;
 
         renderSidebar('quotes');
 
         async function init() {
-            const { data: mData } = await sb.from('materials').select('*');
-            if (mData) mats = mData;
+            try {
+                const { data: mData, error: mError } = await sb.from('materials').select('*');
+                if (mError) throw mError;
+                if (mData) mats = mData;
 
-            const { data: eData } = await sb.from('accessories').select('*');
-            if (eData) extras = eData;
+                const { data: eData, error: eError } = await sb.from('accessories').select('*');
+                if (eError) throw eError;
+                if (eData) extras = eData;
 
-            const sel = document.getElementById('addExtSel'); sel.innerHTML = "";
-            extras.forEach(e => sel.innerHTML += `<option value="${e.id}">${e.name} (${e.cost}€)</option>`);
+                const sel = document.getElementById('addExtSel'); sel.innerHTML = "";
+                extras.forEach(e => sel.innerHTML += `<option value="${e.id}">${e.name} (${e.cost}€)</option>`);
 
-            const { data: pData } = await sb.from('print_models').select('*');
-            const mSel = document.getElementById('selModel');
-            mSel.innerHTML = '<option value="">-- Preset --</option>';
-            if (pData) pData.forEach(p => {
-                loadedPresets[p.id] = p;
-                mSel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
+                const { data: pData, error: pError } = await sb.from('print_models').select('*');
+                if (pError) throw pError;
+                const mSel = document.getElementById('selModel');
+                mSel.innerHTML = '<option value="">-- Preset --</option>';
+                if (pData) pData.forEach(p => {
+                    loadedPresets[p.id] = p;
+                    mSel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
 
-            const { data: cData } = await sb.from('customers').select('*').order('name');
-            const cSel = document.getElementById('selClient'); cSel.innerHTML = "";
-            if (cData) cData.forEach(c => cSel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+                const { data: cData, error: cError } = await sb.from('customers').select('*').order('name');
+                if (cError) throw cError;
+                const cSel = document.getElementById('selClient'); cSel.innerHTML = "";
+                if (cData) cData.forEach(c => cSel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
 
-            loadQuotes();
+                loadQuotes();
 
-            document.addEventListener('click', function (e) {
-                const dd = document.getElementById('materialDropdown');
-                const inp = document.getElementById('materialSearch');
-                if (!dd.contains(e.target) && e.target !== inp) {
-                    dd.classList.add('hidden');
-                }
-            });
+                document.addEventListener('click', function (e) {
+                    const dd = document.getElementById('materialDropdown');
+                    const inp = document.getElementById('materialSearch');
+                    if (!dd.contains(e.target) && e.target !== inp) {
+                        dd.classList.add('hidden');
+                    }
+                });
+            } catch (e) {
+                console.error("INIT ERROR:", e);
+                alert("Σφάλμα κατά την φόρτωση: " + e.message);
+            }
         }
         setTimeout(init, 500);
 
         async function loadQuotes() {
             const list = document.getElementById('quotesList');
-            const { data: quotes } = await sb.from('quotes').select('*').order('created_at', { ascending: false });
-            const { data: customers } = await sb.from('customers').select('id, name');
-            const cMap = {};
-            if (customers) customers.forEach(c => cMap[c.id] = c.name);
+            try {
+                const { data: quotes, error: qError } = await sb.from('quotes').select('*').order('created_at', { ascending: false });
+                if (qError) throw qError;
 
-            list.innerHTML = "";
-            if (!quotes || quotes.length === 0) { list.innerHTML = `<div class="text-center text-gray-600 py-10">Κανένα στοιχείο</div>`; return; }
+                const { data: customers, error: cError } = await sb.from('customers').select('id, name');
+                if (cError) throw cError;
 
-            quotes.forEach(q => {
-                const d = new Date(q.created_at).toLocaleDateString();
-                list.innerHTML += `
+                const cMap = {};
+                if (customers) customers.forEach(c => cMap[c.id] = c.name);
+
+                list.innerHTML = "";
+                if (!quotes || quotes.length === 0) { list.innerHTML = `<div class="text-center text-gray-600 py-10">Κανένα στοιχείο</div>`; return; }
+
+                quotes.forEach(q => {
+                    const d = new Date(q.created_at).toLocaleDateString();
+                    list.innerHTML += `
                 <div class="bg-[#27272a] p-5 rounded-2xl border border-gray-700 shadow-lg flex flex-col gap-3 relative group">
                     <div class="flex justify-between items-start">
                         <div>
@@ -318,7 +337,11 @@
                         </div>
                     </div>
                 </div>`;
-            });
+                });
+            } catch (e) {
+                console.error("LOAD QUOTES ERROR:", e);
+                list.innerHTML = `<div class="text-center text-red-500 py-10">Σφάλμα φόρτωσης: ${e.message}</div>`;
+            }
         }
 
         function filterMaterialList() {
