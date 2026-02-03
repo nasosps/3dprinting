@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,21 +16,26 @@
         }
     </style>
 </head>
+
 <body class="bg-[#09090b] text-white font-sans antialiased pb-20 pt-32"> <!-- Added pt-32 to fix overlap -->
-    
+
     <!-- Back Button -->
-    <a href="index.html" class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
+    <a href="index.html"
+        class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
         <i class="fas fa-arrow-left"></i>
     </a>
 
     <header class="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md z-40 p-6 border-b border-gray-800 pl-20">
         <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <h1 class="text-3xl font-black tracking-tight text-white">Μοντέλα <span class="text-purple-500">Presets</span></h1>
+            <h1 class="text-3xl font-black tracking-tight text-white">Μοντέλα <span
+                    class="text-purple-500">Presets</span></h1>
             <div class="flex gap-3">
-                 <input type="text" id="searchInput" placeholder="Αναζήτηση..." class="hidden md:block bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
-                 <button onclick="openModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg shadow-purple-900/40 transition flex items-center gap-2">
+                <input type="text" id="searchInput" placeholder="Αναζήτηση..."
+                    class="hidden md:block bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                <button onclick="openModal()"
+                    class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-xl font-bold shadow-lg shadow-purple-900/40 transition flex items-center gap-2">
                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">Νέο</span>
-                 </button>
+                </button>
             </div>
         </div>
     </header>
@@ -42,49 +48,63 @@
 
     <!-- Modal logic similar to others... -->
     <!-- Important: Smart Material Select logic inside Modal -->
-    <div id="modelModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modelModal"
+        class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-[#18181b] rounded-3xl w-full max-w-lg border border-gray-700 shadow-2xl p-8 relative">
-             <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-             <h2 class="text-2xl font-bold mb-6 text-white">Δημιουργία Preset</h2>
-             
-             <form id="modelForm" onsubmit="handleModelSubmit(event)" class="space-y-4">
-                 <input type="hidden" id="modelId">
-                 
-                 <div>
-                     <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Ονομα Μοντελου</label>
-                     <input type="text" id="name" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" required>
-                 </div>
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white"><i
+                    class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-6 text-white">Δημιουργία Preset</h2>
 
-                 <div>
-                     <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Υλικο (Default)</label>
-                     <select id="materialSelect" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none">
-                         <!-- Smart Populated -->
-                     </select>
-                 </div>
+            <form id="modelForm" onsubmit="handleModelSubmit(event)" class="space-y-4">
+                <input type="hidden" id="modelId">
 
-                 <div class="grid grid-cols-2 gap-4">
-                     <div>
-                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Βάρος (g)</label>
-                        <input type="number" id="weight" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white" required>
-                     </div>
-                     <div>
-                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Ώρες</label>
-                        <input type="number" id="time" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white" required>
-                     </div>
-                 </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Ονομα
+                        Μοντελου</label>
+                    <input type="text" id="name"
+                        class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none"
+                        required>
+                </div>
 
-                 <div class="grid grid-cols-2 gap-4 bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Υλικο
+                        (Default)</label>
+                    <select id="materialSelect"
+                        class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none">
+                        <!-- Smart Populated -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-purple-400 text-xs font-bold uppercase tracking-wider mb-2">Τιμή / Τμχ</label>
-                        <input type="number" id="unitPrice" step="0.01" class="w-full bg-transparent border-b border-purple-500 text-xl font-bold text-white outline-none">
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Βάρος
+                            (g)</label>
+                        <input type="number" id="weight"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Ώρες</label>
+                        <input type="number" id="time"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                    <div>
+                        <label class="block text-purple-400 text-xs font-bold uppercase tracking-wider mb-2">Τιμή /
+                            Τμχ</label>
+                        <input type="number" id="unitPrice" step="0.01"
+                            class="w-full bg-transparent border-b border-purple-500 text-xl font-bold text-white outline-none">
                     </div>
                     <div class="text-right flex flex-col justify-end">
-                        <button type="button" onclick="calcPrice()" class="text-xs text-purple-400 hover:text-white underline">Υπολογισμός</button>
+                        <button type="button" onclick="calcPrice()"
+                            class="text-xs text-purple-400 hover:text-white underline">Υπολογισμός</button>
                     </div>
-                 </div>
+                </div>
 
-                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl shadow-lg mt-4">Αποθήκευση</button>
-             </form>
+                <button type="submit"
+                    class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl shadow-lg mt-4">Αποθήκευση</button>
+            </form>
         </div>
     </div>
 
@@ -121,31 +141,85 @@
         }
 
         async function loadSmartMaterials() {
-             const { data: mats } = await sb.from('materials').select('*');
-             const sel = document.getElementById('materialSelect');
-             // Group by Type, pick BEST ID
-             // ... Similar logic to orders.html ...
-             // For Presets, we just need a valid ID.
-             // We'll show all, sorted smart.
-             mats.sort((a,b) => {
-                 if (a.current_weight > 0 && b.current_weight <= 0) return -1;
-                 return b.current_weight - a.current_weight; // Heaviest first for Presets? Or Lightest? 
-                 // For Definition, maybe Heaviest (Main spool) is better default?
-                 // Or just newest?
-                 // Let's stick to Newest for presets definition.
-             });
-             
-             sel.innerHTML = mats.map(m => `<option value="${m.id}">${m.brand} ${m.type} ${m.color} (${Math.round(m.current_weight)}g)</option>`).join('');
+            const { data: mats } = await sb.from('materials').select('*');
+            const sel = document.getElementById('materialSelect');
+            // Group by Type, pick BEST ID
+            // ... Similar logic to orders.html ...
+            // For Presets, we just need a valid ID.
+            // We'll show all, sorted smart.
+            mats.sort((a, b) => {
+                if (a.current_weight > 0 && b.current_weight <= 0) return -1;
+                return b.current_weight - a.current_weight; // Heaviest first for Presets? Or Lightest? 
+                // For Definition, maybe Heaviest (Main spool) is better default?
+                // Or just newest?
+                // Let's stick to Newest for presets definition.
+            });
+
+            sel.innerHTML = mats.map(m => `<option value="${m.id}">${m.brand} ${m.type} ${m.color} (${Math.round(m.current_weight)}g)</option>`).join('');
         }
 
-        function editModel(id) {
-            // ... Logic to fetch and populate ...
+        async function handleModelSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('modelId').value;
+            const data = {
+                name: document.getElementById('name').value,
+                // store the ID of the selected material
+                material_id: document.getElementById('materialSelect').value,
+                weight_g: parseFloat(document.getElementById('weight').value),
+                print_time_hours: parseFloat(document.getElementById('time').value),
+                unit_price: parseFloat(document.getElementById('unitPrice').value)
+            };
+
+            try {
+                if (id) {
+                    const { error } = await sb.from('print_models').update(data).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await sb.from('print_models').insert(data);
+                    if (error) throw error;
+                }
+                showToast('Το μοντέλο αποθηκεύτηκε');
+                closeModal();
+                loadModels();
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function editModel(id) {
+            const { data: m, error } = await sb.from('print_models').select('*').eq('id', id).single();
+            if (error) return showToast(error.message, 'error');
+
+            document.getElementById('modelId').value = m.id;
+            document.getElementById('name').value = m.name;
+            document.getElementById('materialSelect').value = m.material_id || '';
+            document.getElementById('weight').value = m.weight_g;
+            document.getElementById('time').value = m.print_time_hours || 0;
+            document.getElementById('unitPrice').value = m.unit_price;
+
             openModal();
         }
 
         function calcPrice() {
-            // Simple calc logic based on weight * material cost
-            // ...
+            // Logic: (Weight * Material Cost/g) + (Time * Hourly Rate) + Markup
+            // We need the material Price. Let's find it from the dropdown info or fetch.
+            // Since dropdown text contains "Brand Type Color (Wg)", we can't easily parse price.
+            // We should probably look up the material from database or a loaded array.
+            // For now, simpler approximation if we assume average PLA cost ~20€/kg -> 0.02€/g
+            // And assuming 1€/hour for energy/wear.
+
+            const w = parseFloat(document.getElementById('weight').value) || 0;
+            const t = parseFloat(document.getElementById('time').value) || 0;
+
+            // Ideal: Fetch material price. 
+            // Better approximation: 0.025€/g (Standard Retail)
+            const matCost = w * 0.025;
+            const timeCost = t * 1.5; // 1.5€ per hour machine time
+
+            const totalCost = matCost + timeCost;
+            const finalPrice = totalCost * 2; // 100% Markup
+
+            document.getElementById('unitPrice').value = finalPrice.toFixed(2);
         }
 
         function openModal() { document.getElementById('modelModal').classList.remove('hidden'); }
@@ -155,4 +229,5 @@
 
     </script>
 </body>
+
 </html>

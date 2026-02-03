@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,306 +16,556 @@
         }
     </style>
 </head>
+
 <body class="bg-[#09090b] text-white font-sans antialiased pb-20">
-    
+
     <!-- Back Button -->
-    <a href="index.html" class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
+    <a href="index.html"
+        class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
         <i class="fas fa-arrow-left"></i>
     </a>
 
-    <header class="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md z-40 px-6 py-4 border-b border-gray-800 flex justify-between items-center pl-20">
-        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">Παραγγελίες</h1>
+    <header
+        class="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md z-40 px-6 py-4 border-b border-gray-800 flex justify-between items-center pl-20">
+        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+            Παραγγελίες</h1>
         <div class="flex gap-3">
-             <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 transition"><i class="fas fa-plus mr-2"></i>Νέα</button>
-             <button onclick="toggleView()" id="viewToggleBtn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-bold transition"><i class="fas fa-archive mr-2"></i>Αρχείο</button>
+            <button onclick="openNewModal()"
+                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 transition"><i
+                    class="fas fa-plus mr-2"></i>Νέα</button>
+            <button onclick="toggleView()" id="viewToggleBtn"
+                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-bold transition"><i
+                    class="fas fa-archive mr-2"></i>Αρχείο</button>
         </div>
     </header>
 
-    <div class="max-w-5xl mx-auto px-4 pt-24">
-        
+    <div class="max-w-6xl mx-auto px-4 pt-24">
+
         <!-- Active Orders Grid -->
-        <div id="activeOrdersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="activeOrdersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
             <!-- Cards injected here -->
         </div>
 
-        <!-- Archived Orders List (Hidden by default) -->
-        <div id="archivedOrdersList" class="hidden space-y-4">
-             <!-- List items injected here -->
+        <!-- Archived Orders List -->
+        <div id="archivedOrdersList" class="hidden space-y-4 pb-20">
+            <!-- List items injected here -->
         </div>
 
     </div>
 
-    <!-- Order Modal -->
-    <div id="orderModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-         <div class="bg-[#18181b] rounded-2xl w-full max-w-2xl border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar relative">
-             <div class="sticky top-0 bg-[#18181b] p-6 border-b border-gray-700 flex justify-between items-center z-10">
-                 <h2 class="text-xl font-bold text-white">Καταχώρηση Παραγγελίας</h2>
-                 <button onclick="closeModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-             </div>
-             
-             <div class="p-6 space-y-6">
-                 <!-- Tabs -->
-                 <div class="flex bg-gray-800/50 p-1 rounded-lg">
-                     <button onclick="switchTab('preset')" id="tabPreset" class="flex-1 py-2 rounded-md text-sm font-bold text-white bg-blue-600 shadow transition">Preset</button>
-                     <button onclick="switchTab('custom')" id="tabCustom" class="flex-1 py-2 rounded-md text-sm font-bold text-gray-400 hover:text-white transition">Custom</button>
-                 </div>
+    <!-- ADVANCED ORDER MODAL -->
+    <div id="orderModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-start justify-center overflow-y-auto">
+        <div
+            class="w-full min-h-screen sm:min-h-0 sm:max-w-xl sm:my-10 bg-[#18181b] sm:rounded-2xl sm:border border-gray-700 shadow-2xl flex flex-col relative">
 
-                 <form id="orderForm" onsubmit="handleOrderSubmit(event)">
-                     <input type="hidden" id="orderId">
-                     
-                     <div class="grid grid-cols-2 gap-4 mb-4">
-                         <div>
-                             <label class="label-text">Πελάτης</label> <!-- Fixed Accent -->
-                             <input type="search" id="client" list="clientList" class="input-field" placeholder="Όνομα..." required>
-                             <datalist id="clientList"></datalist>
-                         </div>
-                         <div>
-                             <label class="label-text">Τίτλος Έργου</label>
-                             <input type="text" id="title" class="input-field" placeholder="π.χ. Βάση Ακουστικών" required>
-                         </div>
-                     </div>
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-[#202022] sm:rounded-t-2xl">
+                <h3 class="text-xl font-bold text-blue-400" id="modalTitle">Νέα Παραγγελία</h3>
+                <button onclick="closeModal()"
+                    class="bg-gray-800 w-10 h-10 rounded-full text-gray-400 hover:text-white flex items-center justify-center border border-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
 
-                     <!-- Preset Section -->
-                     <div id="presetSection" class="space-y-4">
+            <div class="p-6 space-y-6 pb-24">
+                <input type="hidden" id="editOrderId">
+
+                <div class="space-y-4">
+                    <div>
+                        <label
+                            class="text-xs text-gray-500 uppercase font-bold ml-1 mb-1 block tracking-wider">Πελάτης</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="client" list="clientList"
+                                class="w-full p-3 rounded-xl bg-[#27272a] border border-gray-600 text-white outline-none focus:border-blue-500 shadow-sm"
+                                placeholder="Όνομα πελάτη...">
+                            <datalist id="clientList"></datalist>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold uppercase ml-1 mb-1 block tracking-wider">Τίτλος
+                            Έργου / Preset</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="inpTitle"
+                                class="w-full p-3 rounded-xl bg-[#27272a] border border-gray-600 outline-none focus:border-blue-500 font-bold placeholder-gray-500 shadow-sm"
+                                placeholder="Περιγραφή...">
+                            <select id="selModel"
+                                class="w-1/3 p-3 rounded-xl bg-[#202022] border border-gray-600 text-xs outline-none focus:border-blue-500"
+                                onchange="applyPreset()">
+                                <option value="">-- Preset --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MATERIALS SECTION -->
+                <div class="bg-gray-800/30 p-4 rounded-2xl border border-blue-900/30">
+                    <div class="text-xs text-blue-400 font-bold mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-fill-drip"></i> Υλικα & Χρωματα
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 mb-3 relative">
+                        <div class="relative">
+                            <input type="text" id="materialSearch"
+                                class="w-full p-3 rounded-xl bg-[#27272a] border border-gray-600 text-white text-sm focus:border-blue-500 outline-none shadow-inner"
+                                placeholder="🔍 Αναζήτηση..." onkeyup="filterMaterialList()"
+                                onfocus="filterMaterialList()">
+                            <div id="materialDropdown"
+                                class="hidden absolute z-50 w-full bg-[#27272a] border border-gray-600 rounded-lg max-h-48 overflow-y-auto shadow-xl mt-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 items-center bg-[#27272a] p-3 rounded-xl border border-gray-600 shadow-lg">
+                        <div id="selectedMatInfo"
+                            class="flex-grow text-sm text-gray-300 italic px-2 font-medium truncate">--</div>
+                        <input type="number" id="addMatGrams" placeholder="Gr"
+                            class="w-20 p-2 rounded-lg bg-gray-900 text-lg text-center border border-gray-500 text-white font-bold outline-none focus:border-blue-500">
+                        <button onclick="addMaterialRow()"
+                            class="bg-blue-600 w-10 h-10 rounded-lg text-white hover:bg-blue-500 shadow-lg flex items-center justify-center"><i
+                                class="fas fa-plus"></i></button>
+                    </div>
+
+                    <div id="usedMatsList" class="mt-3 space-y-2"></div>
+                </div>
+
+                <!-- BATCH & EXTRAS -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-800/30 p-4 rounded-2xl border border-gray-600/30">
+                        <label class="text-xs text-gray-400 block mb-2 font-bold uppercase">Extras (€)</label>
+                        <div class="flex gap-2">
+                            <select id="addExtSel"
+                                class="w-full p-2 rounded-lg bg-[#27272a] border border-gray-600 text-xs"></select>
+                            <button onclick="addExtraRow()" class="bg-indigo-600 px-3 rounded-lg"><i
+                                    class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="usedExtList" class="mt-2 space-y-1"></div>
+                    </div>
+
+                    <div class="bg-gray-800/30 p-4 rounded-2xl border border-gray-600/30">
+                        <label class="text-xs text-gray-400 block mb-2 font-bold uppercase">Εκτύπωση (Batch)</label>
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <div>
+                                <div class="text-[10px] text-gray-500">TEM/BATCH</div><input type="number" id="batchPcs"
+                                    value="1" class="w-full bg-[#27272a] border border-gray-600 text-center rounded p-1"
+                                    oninput="recalc()">
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-gray-500">MINS</div><input type="number" id="bMins"
+                                    value="0" class="w-full bg-[#27272a] border border-gray-600 text-center rounded p-1"
+                                    oninput="recalc()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROGRESS & FINANCIALS -->
+                <div class="bg-[#202022] p-5 rounded-3xl border border-gray-600 shadow-2xl space-y-4">
+
+                    <!-- Progress Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold uppercase text-gray-400 mb-1">
+                            <span>Προοδος</span>
+                            <span class="text-white"><span id="progText">0</span> / <span id="totalText">1</span></span>
+                        </div>
+                        <input type="range" id="progressSlider" min="0" max="1" value="0" step="1"
+                            class="w-full accent-green-500 h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            oninput="updateProgressUI()">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs text-gray-400 font-bold uppercase block mb-1">Ποσοτητα</label><input
+                                type="number" id="inpQty" value="1"
+                                class="w-full p-3 bg-[#18181b] border border-gray-600 text-center text-white font-bold rounded-xl text-2xl"
+                                oninput="recalc()"></div>
+                        <div><label class="text-xs text-blue-400 font-bold uppercase block mb-1">Τιμη (€)</label><input
+                                type="number" id="inpUnitPrice"
+                                class="w-full p-3 bg-[#18181b] border border-blue-500 text-center text-white font-bold rounded-xl text-2xl"
+                                oninput="recalc()"></div>
+                    </div>
+
+                    <!-- Payments -->
+                    <div class="bg-black/40 p-3 rounded-xl border border-gray-700 grid grid-cols-2 gap-4 items-center">
                         <div>
-                             <label class="label-text">Επιλογή Μοντέλου</label>
-                             <select id="modelSelect" class="input-field" onchange="loadPresetDetails()">
-                                 <option value="">-- Διάλεξε Preset --</option>
-                             </select>
+                            <label class="text-[10px] text-gray-500 font-bold uppercase block">Προκαταβολη</label>
+                            <input type="number" id="inpDeposit" value="0"
+                                class="w-full bg-transparent border-b border-gray-600 text-yellow-500 text-xl font-bold outline-none"
+                                oninput="recalc()">
                         </div>
-                        <div id="presetInfo" class="hidden bg-blue-900/20 p-4 rounded-lg border border-blue-500/30 text-sm text-blue-200">
-                             <!-- Dynamic Details -->
+                        <div class="text-right">
+                            <label class="text-[10px] text-gray-500 font-bold uppercase block">Υπολοιπο</label>
+                            <div class="text-xl font-bold text-red-400"><span id="resBalance">0.00</span>€</div>
                         </div>
-                     </div>
+                    </div>
 
-                     <!-- Custom Section -->
-                     <div id="customSection" class="space-y-4 hidden">
-                         <div>
-                             <label class="label-text">Υλικό (Smart Select)</label>
-                             <select id="materialSelect" class="input-field">
-                                 <!-- Will be populated with Smart Logic -->
-                             </select>
-                             <p class="text-[10px] text-gray-500 mt-1">*Με αστερίσκο (*) η προτεινόμενη επιλογή (Λίγο υπόλοιπο ή Παλιότερο)</p>
-                         </div>
-                         <div class="grid grid-cols-3 gap-4">
-                             <div><label class="label-text">Βάρος (g)</label><input type="number" id="weight" class="input-field"></div>
-                             <div><label class="label-text">Ώρες</label><input type="number" id="time" class="input-field"></div>
-                             <div><label class="label-text">Κόστος</label><input type="number" id="cost" class="input-field" step="0.01"></div>
-                         </div>
-                     </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <label
+                            class="flex items-center gap-2 cursor-pointer bg-gray-800 px-3 py-1 rounded-lg border border-gray-600">
+                            <input type="checkbox" id="chkPaid" class="accent-green-500 w-4 h-4" onchange="recalc()">
+                            <span class="text-xs font-bold uppercase text-gray-300">Εξωφληση</span>
+                        </label>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-500 uppercase font-bold">ΣΥΝΟΛΟ</div>
+                            <div class="text-3xl font-black text-white"><span id="resTotalPrice">0.00</span>€</div>
+                        </div>
+                    </div>
+                </div>
 
-                     <div class="grid grid-cols-2 gap-4 mt-6">
-                         <div><label class="label-text">Ποσότητα</label><input type="number" id="quantity" class="input-field" value="1" min="1" required></div>
-                         <div><label class="label-text">Τελική Τιμή (€)</label><input type="number" id="price" class="input-field" step="0.01" required></div>
-                     </div>
+                <div class="flex gap-4">
+                    <button onclick="saveOrder()"
+                        class="flex-1 bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-500 transition shadow-xl text-lg text-white uppercase tracking-wider">
+                        <i class="fas fa-save mr-2"></i> Αποθηκευση
+                    </button>
+                    <button onclick="completeOrder()" id="btnComplete"
+                        class="bg-green-600 py-4 px-6 rounded-xl font-bold hover:bg-green-500 transition shadow-xl text-white hidden">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
 
-                     <div class="mt-8 pt-4 border-t border-gray-700 flex justify-end">
-                         <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition transform hover:scale-105">Αποθήκευση</button>
-                     </div>
-                 </form>
-             </div>
-         </div>
+            </div>
+        </div>
     </div>
-
-    <style>
-        .label-text { display: block; color: #9ca3af; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .input-field { width: 100%; background-color: #27272a; border: 1px solid #3f3f46; border-radius: 0.75rem; padding: 0.75rem 1rem; color: white; outline: none; transition: all 0.2s; }
-        .input-field:focus { border-color: #3b82f6; ring: 2px solid rgba(59,130,246,0.5); }
-    </style>
 
     <script src="common.js"></script>
     <script>
+        // --- DATA & STATE ---
+        let orders = [], clients = [], mats = [], extras = [], loadedPresets = {}, currentMats = [], currentExtras = [], selectedSpool = null;
         let isArchivedView = false;
-        let presets = [];
-        let clients = [];
 
-        async function loadData() {
-            // Load Orders
-            const { data: orders, error } = await sb.from('orders').select('*, clients(name)').order('created_at', { ascending: false });
-            if (error) return console.error(error);
-            renderOrders(orders);
+        // --- INIT ---
+        renderSidebar('orders');
+        document.addEventListener('DOMContentLoaded', init);
 
-            // Load Clients for datalist
-            const { data: cl } = await sb.from('clients').select('*');
-            clients = cl || [];
-            document.getElementById('clientList').innerHTML = clients.map(c => `<option value="${c.name}">`).join('');
+        async function init() {
+            // Load Dependencies
+            const [m, e, p, c] = await Promise.all([
+                sb.from('materials').select('*'),
+                sb.from('accessories').select('*'),
+                sb.from('print_models').select('*'),
+                sb.from('customers').select('*').order('name')
+            ]);
 
-            // Load Presets
-            const { data: pr } = await sb.from('print_models').select('*, materials(brand, type, color, price)');
-            presets = pr || [];
-            const modelSel = document.getElementById('modelSelect');
-            modelSel.innerHTML = '<option value="">-- Διάλεξε Preset --</option>' + 
-                presets.map(p => `<option value="${p.id}">${p.name} (${p.materials?.color})</option>`).join('');
+            if (m.data) mats = m.data;
+            if (e.data) extras = e.data;
+            if (p.data) p.data.forEach(x => loadedPresets[x.id] = x);
+            if (c.data) clients = c.data;
 
-            // Load Materials for Custom Section (Smart Logic)
-            loadSmartMaterials();
-        }
+            // Populate Dropdowns
+            const matSel = document.getElementById('addExtSel'); matSel.innerHTML = "";
+            extras.forEach(x => matSel.innerHTML += `<option value="${x.id}">${x.name} (${x.cost}€)</option>`);
 
-        async function loadSmartMaterials() {
-            const { data: mats } = await sb.from('materials').select('*').order('created_at', { ascending: true }); // Get oldest first initially
-            if (!mats) return;
+            const modSel = document.getElementById('selModel');
+            Object.values(loadedPresets).forEach(x => modSel.innerHTML += `<option value="${x.id}">${x.name}</option>`);
 
-            // Group by Type
-            const groups = {};
-            mats.forEach(m => {
-                // Only consider active materials for new orders? Or allow 0g if desperate?
-                // Let's allow 0g but push them to bottom.
-                const key = `${m.brand} | ${m.type} | ${m.color}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(m);
-            });
+            const cliList = document.getElementById('clientList'); cliList.innerHTML = "";
+            clients.forEach(c => cliList.innerHTML += `<option value="${c.name}">`);
 
-            const sel = document.getElementById('materialSelect');
-            sel.innerHTML = '';
-
-            Object.keys(groups).sort().forEach(key => {
-                const group = groups[key];
-                
-                // Smart Sort: 
-                // 1. Positive Weight (Filter 0g out? No, keep but de-prioritize)
-                // 2. Lowest Positive Weight (Finish scraps)
-                // 3. FIFO
-                group.sort((a,b) => {
-                     if (a.current_weight > 0 && b.current_weight <= 0) return -1;
-                     if (b.current_weight > 0 && a.current_weight <= 0) return 1;
-                     
-                     if (a.current_weight > 0) {
-                        // Prioritize less weight to finish spool
-                        return a.current_weight - b.current_weight;
-                     }
-                     // If both 0, FIFO
-                     return new Date(a.created_at) - new Date(b.created_at);
-                });
-
-                // The best candidate
-                const best = group[0];
-                const isAvailable = best.current_weight > 0;
-                
-                // We show the GROUP in dropdown, but the value is the ID of the BEST spool.
-                // Or should we list all spools? 
-                // User said: "Select auto...". 
-                // Let's add options for each spool but PRE-SELECT the best one if the user selects the group?
-                // Simpler: List individual spools but mark the best one.
-                
-                group.forEach((m, idx) => {
-                     const isBest = idx === 0 && m.current_weight > 0;
-                     const label = `${m.brand} ${m.type} ${m.color} (${Math.round(m.current_weight)}g) - #${m.id.slice(-4)}`;
-                     const option = document.createElement('option');
-                     option.value = m.id;
-                     option.text = (isBest ? '* ' : '') + label;
-                     if (m.current_weight <= 0) option.disabled = true; // Use style to dim?
-                     if (isBest) option.selected = true; // This might select the last one in the loop if multiple groups. 
-                     // Wait, we need the dropdown to let user pick ANY material, but DEFAULT to the best choice for that type?
-                     // Standard HTML Select can't do nested logic easily.
-                     // We'll just list them sorted.
-                     
-                     sel.appendChild(option);
-                });
-            });
-            // Actually, HTML select `selected` attribute works if only one. If we recreate content, only the LAST one marked selected works? 
-            // Better: Don't set `selected` in loop. Set the very first option of the list as value?
-            // The list is sorted by groups. 
-            // We just let the user pick. Sorting them smartly (Scraps at top of group) is enough.
-        }
-
-        function renderOrders(orders) {
-             const activeContainer = document.getElementById('activeOrdersGrid');
-             const archContainer = document.getElementById('archivedOrdersList');
-             activeContainer.innerHTML = '';
-             archContainer.innerHTML = '';
-
-             orders.forEach(o => {
-                 const isCompleted = o.status === 'Completed';
-                 const html = `
-                    <div class="bg-[#18181b] p-5 rounded-2xl border ${isCompleted ? 'border-green-900/30' : 'border-gray-700'} shadow-lg relative overflow-hidden group">
-                        <div class="flex justify-between items-start mb-2">
-                             <div>
-                                 <h3 class="font-bold text-lg text-white">${o.title}</h3>
-                                 <p class="text-sm text-gray-400"><i class="fas fa-user mr-2 text-gray-600"></i>${o.clients?.name || 'Άγνωστος'}</p>
-                             </div>
-                             <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(o.status)}">${o.status}</span>
-                        </div>
-                        <div class="flex gap-4 text-xs font-mono text-gray-500 mt-2">
-                             <span>${o.quantity} τμχ</span>
-                             <span>${o.total_price}€</span>
-                        </div>
-                        <!-- Action buttons... (Keep existing logic or simplified) -->
-                         <div class="mt-4 flex gap-2">
-                             <button onclick="editOrder('${o.id}')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-2 rounded text-xs font-bold text-gray-300">Επεξεργασία</button>
-                             ${!isCompleted ? `<button onclick="updateStatus('${o.id}', 'Completed')" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded text-xs font-bold text-white">Ολοκλήρωση</button>` : ''}
-                         </div>
-                    </div>
-                 `;
-
-                 if (isCompleted) archContainer.innerHTML += html;
-                 else activeContainer.innerHTML += html;
-             });
-        }
-
-        function getStatusColor(s) {
-            if (s === 'Pending') return 'bg-yellow-500/20 text-yellow-500';
-            if (s === 'Printing') return 'bg-blue-500/20 text-blue-500';
-            if (s === 'Completed') return 'bg-green-500/20 text-green-500';
-            return 'bg-gray-700 text-gray-300';
-        }
-
-        function toggleView() {
-            isArchivedView = !isArchivedView;
-            document.getElementById('activeOrdersGrid').classList.toggle('hidden', isArchivedView);
-            document.getElementById('archivedOrdersList').classList.toggle('hidden', !isArchivedView);
-            document.getElementById('viewToggleBtn').innerHTML = isArchivedView ? '<i class="fas fa-list mr-2"></i>Ενεργές' : '<i class="fas fa-archive mr-2"></i>Αρχείο';
-        }
-
-        function switchTab(t) {
-            document.getElementById('tabPreset').className = t === 'preset' ? 'flex-1 py-2 rounded-md text-sm font-bold text-white bg-blue-600 shadow transition' : 'flex-1 py-2 rounded-md text-sm font-bold text-gray-400 hover:text-white transition';
-            document.getElementById('tabCustom').className = t === 'custom' ? 'flex-1 py-2 rounded-md text-sm font-bold text-white bg-blue-600 shadow transition' : 'flex-1 py-2 rounded-md text-sm font-bold text-gray-400 hover:text-white transition';
-            
-            document.getElementById('presetSection').classList.toggle('hidden', t !== 'preset');
-            document.getElementById('customSection').classList.toggle('hidden', t !== 'custom');
-        }
-
-        function loadPresetDetails() {
-            const id = document.getElementById('modelSelect').value;
-            const p = presets.find(x => x.id === id);
-            const box = document.getElementById('presetInfo');
-            if (p) {
-                // Here we might want to check if p.material_id points to an empty spool?
-                // But the user didn't ask to block it, just to manage stock better.
-                // We'll leave it as is for now.
-                box.innerHTML = `
-                    <div class="flex justify-between"><span>Υλικό:</span> <span class="text-white font-bold">${p.materials?.color || 'N/A'}</span></div>
-                    <div class="flex justify-between"><span>Βάρος:</span> <span class="text-white font-bold">${p.weight_g}g</span></div>
-                    <div class="flex justify-between"><span>Τιμή/τμχ:</span> <span class="text-white font-bold">${p.unit_price}€</span></div>
-                `;
-                box.classList.remove('hidden');
-                document.getElementById('price').value = p.unit_price;
-            } else {
-                box.classList.add('hidden');
-            }
-        }
-        
-        // ... (handleOrderSubmit, editOrder, updateStatus similar to old, ensuring client creation logic is preserved) ...
-        // Re-implement simplified submit
-        async function handleOrderSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('orderId').value;
-            const clientName = document.getElementById('client').value;
-            // Find or Create Client logic would be here...
-            
-            // For brevity of this patch, assume standard logic.
-            // ...
-            showToast('Η παραγγελία αποθηκεύτηκε');
-            closeModal();
             loadData();
         }
 
-        // Init
-        document.addEventListener('DOMContentLoaded', loadData);
-        
-        // Helper
-        function openModal() { document.getElementById('orderModal').classList.remove('hidden'); }
+        async function loadData() {
+            const { data, error } = await sb.from('orders').select('*, clients(name)').order('created_at', { ascending: false });
+            if (data) {
+                orders = data;
+                renderOrders();
+            }
+        }
+
+        function renderOrders() {
+            const grid = document.getElementById('activeOrdersGrid');
+            const list = document.getElementById('archivedOrdersList');
+            grid.innerHTML = ""; list.innerHTML = "";
+
+            const visibleOrders = orders.filter(o => isArchivedView ? o.status === 'Completed' : o.status !== 'Completed');
+
+            if (visibleOrders.length === 0) {
+                const msg = `<div class="col-span-full text-center text-gray-500 py-10 opacity-50 text-xl font-bold uppercase tracking-widest">Κενο</div>`;
+                if (isArchivedView) list.innerHTML = msg; else grid.innerHTML = msg;
+                return;
+            }
+
+            visibleOrders.forEach(o => {
+                const isPaid = o.is_paid;
+                const progress = o.completed_pieces || 0;
+                const total = o.total_pieces || 1;
+                const percent = (progress / total) * 100;
+                const balance = (o.sale_price || 0) - (o.deposit || 0);
+
+                const html = `
+                <div class="bg-[#18181b] p-5 rounded-3xl border border-gray-800 hover:border-blue-500/30 transition shadow-lg group relative overflow-hidden flex flex-col justify-between h-full">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                             <div>
+                                 <div class="text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">${o.clients?.name || 'Αγνωστος'}</div>
+                                 <h3 class="font-bold text-white text-lg leading-tight">${o.description}</h3>
+                             </div>
+                             <div class="text-right">
+                                 <div class="text-xl font-black ${isPaid ? 'text-green-500' : (balance > 0 ? 'text-red-400' : 'text-gray-400')}">${o.sale_price}€</div>
+                                 ${!isPaid && balance > 0 ? `<div class="text-[10px] text-red-500 font-bold uppercase">Υπολοιπο ${balance}€</div>` : ''}
+                             </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mt-4 mb-2">
+                            <div class="flex justify-between text-[10px] font-bold text-gray-500 uppercase mb-1">
+                                <span>Progress</span>
+                                <span>${progress} / ${total}</span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-800 pt-3 mt-2 flex gap-2">
+                        <button onclick="editOrder('${o.id}')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-gray-300 font-bold text-sm transition"><i class="fas fa-pen"></i></button>
+                        ${o.status !== 'Completed' ?
+                        `<button onclick="quickComplete('${o.id}')" class="w-12 bg-gray-800 hover:bg-green-900/40 hover:text-green-400 text-gray-500 rounded-xl transition"><i class="fas fa-check"></i></button>`
+                        : ''}
+                    </div>
+                </div>`;
+
+                if (isArchivedView) list.innerHTML += html; else grid.innerHTML += html;
+            });
+        }
+
+        // --- MODAL & LOGIC ---
+
+        function openNewModal() {
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Νέα Παραγγελία";
+            document.getElementById('orderModal').classList.remove('hidden');
+        }
+
+        async function editOrder(id) {
+            const o = orders.find(x => x.id === id);
+            if (!o) return;
+
+            document.getElementById('editOrderId').value = o.id;
+            document.getElementById('modalTitle').innerText = "Επεξεργασία";
+
+            document.getElementById('client').value = o.clients?.name || "";
+            document.getElementById('inpTitle').value = o.description;
+            document.getElementById('inpQty').value = o.total_pieces;
+            document.getElementById('inpUnitPrice').value = o.unit_price;
+            document.getElementById('inpDeposit').value = o.deposit || 0;
+            document.getElementById('chkPaid').checked = o.is_paid;
+
+            // Restore batch info
+            document.getElementById('batchPcs').value = o.batch_pcs || 1;
+            document.getElementById('bMins').value = o.batch_mins || 0;
+
+            // Restore Progress
+            document.getElementById('progressSlider').max = o.total_pieces;
+            document.getElementById('progressSlider').value = o.completed_pieces;
+            updateProgressUI();
+
+            // Restore Materials
+            currentMats = o.materials_used || [];
+            currentExtras = o.extras_used || [];
+            renderRows();
+
+            if (o.status !== 'Completed') {
+                document.getElementById('btnComplete').classList.remove('hidden');
+            } else {
+                document.getElementById('btnComplete').classList.add('hidden');
+            }
+
+            document.getElementById('orderModal').classList.remove('hidden');
+            recalc();
+        }
+
+        function resetForm() {
+            document.getElementById('editOrderId').value = "";
+            document.getElementById('client').value = "";
+            document.getElementById('inpTitle').value = "";
+            document.getElementById('inpQty').value = "1";
+            document.getElementById('inpUnitPrice').value = "";
+            document.getElementById('inpDeposit').value = "0";
+            document.getElementById('chkPaid').checked = false;
+            document.getElementById('batchPcs').value = "1";
+            document.getElementById('bMins').value = "0";
+            document.getElementById('progressSlider').value = "0";
+            document.getElementById('btnComplete').classList.add('hidden');
+            currentMats = []; currentExtras = [];
+            renderRows();
+            recalc();
+        }
+
+        // ... Reuse Logic from Quotes (filterMaterial, addMaterial, etc.) ...
+        // Simplified for brevity in this replace_file, focusing on core Logic
+
+        function filterMaterialList() {
+            const val = document.getElementById('materialSearch').value.toUpperCase();
+            const dd = document.getElementById('materialDropdown');
+            dd.innerHTML = ""; dd.classList.remove('hidden');
+            const matches = mats.filter(m => (m.brand + m.type + m.color).toUpperCase().includes(val) || m.name?.toUpperCase().includes(val));
+            // Dedupe similar to quotes...
+            const unique = {};
+            matches.forEach(m => {
+                const k = `${m.brand} ${m.type} ${m.color}`;
+                if (!unique[k] || unique[k].current_weight < m.current_weight) unique[k] = m;
+            });
+            Object.values(unique).forEach(m => {
+                const d = document.createElement('div');
+                d.className = "p-3 border-b border-gray-600 hover:bg-gray-700 cursor-pointer flex justify-between";
+                d.innerHTML = `<span>${m.color} <span class="text-xs text-gray-400">${m.brand} ${m.type}</span></span> <span class="text-blue-400 font-bold">${Math.round(m.current_weight)}g</span>`;
+                d.onclick = () => { selectMaterial(m); };
+                dd.appendChild(d);
+            });
+            if (!matches.length) dd.innerHTML = '<div class="p-2 text-gray-500 text-center text-xs">??</div>';
+        }
+        function selectMaterial(m) {
+            selectedSpool = m;
+            document.getElementById('selectedMatInfo').innerText = `${m.brand} ${m.type} ${m.color}`;
+            document.getElementById('materialDropdown').classList.add('hidden');
+            document.getElementById('materialSearch').value = "";
+        }
+        function addMaterialRow() {
+            if (!selectedSpool) return;
+            const g = parseFloat(document.getElementById('addMatGrams').value); if (!g) return;
+            currentMats.push({ id: selectedSpool.id, name: selectedSpool.name, price: selectedSpool.price, grams: g });
+            document.getElementById('addMatGrams').value = ""; selectedSpool = null; document.getElementById('selectedMatInfo').innerText = "--";
+            renderRows();
+        }
+        function addExtraRow() {
+            const id = document.getElementById('addExtSel').value;
+            const e = extras.find(x => x.id === id); if (e) currentExtras.push({ id: e.id, name: e.name, cost: e.cost });
+            renderRows();
+        }
+        function renderRows() {
+            const ml = document.getElementById('usedMatsList'); ml.innerHTML = "";
+            currentMats.forEach((m, i) => ml.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-2 rounded border border-gray-700 text-sm"><span class="text-gray-300">${m.name || 'Material'} (${m.grams}g)</span><i onclick="currentMats.splice(${i},1);renderRows()" class="fas fa-times text-red-500 cursor-pointer"></i></div>`);
+            const el = document.getElementById('usedExtList'); el.innerHTML = "";
+            currentExtras.forEach((e, i) => el.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-2 rounded border border-gray-700 text-sm"><span class="text-gray-300">${e.name} (${e.cost}€)</span><i onclick="currentExtras.splice(${i},1);renderRows()" class="fas fa-times text-red-500 cursor-pointer"></i></div>`);
+            recalc();
+        }
+
+        function recalc() {
+            const qty = parseFloat(document.getElementById('inpQty').value) || 1;
+            const uprice = parseFloat(document.getElementById('inpUnitPrice').value) || 0;
+            const deposit = parseFloat(document.getElementById('inpDeposit').value) || 0;
+            const isPaid = document.getElementById('chkPaid').checked;
+
+            const total = uprice * qty;
+            let balance = total - deposit;
+            if (isPaid) balance = 0;
+
+            document.getElementById('resTotalPrice').innerText = total.toFixed(2);
+            document.getElementById('resBalance').innerText = balance.toFixed(2);
+
+            // Update Slider Max
+            const slider = document.getElementById('progressSlider');
+            if (slider.max != qty) { slider.max = qty; updateProgressUI(); }
+        }
+
+        function updateProgressUI() {
+            const val = document.getElementById('progressSlider').value;
+            const max = document.getElementById('progressSlider').max;
+            document.getElementById('progText').innerText = val;
+            document.getElementById('totalText').innerText = max;
+        }
+
+        function applyPreset() {
+            const id = document.getElementById('selModel').value; const p = loadedPresets[id];
+            if (!p) return;
+            document.getElementById('inpTitle').value = p.name;
+            document.getElementById('inpUnitPrice').value = p.unit_price;
+            document.getElementById('batchPcs').value = p.batch_pcs;
+            document.getElementById('bMins').value = p.batch_mins;
+            if (p.materials) currentMats = JSON.parse(JSON.stringify(p.materials));
+            renderRows();
+        }
+
+        // --- SUBMIT --- 
+
+        async function saveOrder() {
+            const id = document.getElementById('editOrderId').value;
+            const cName = document.getElementById('client').value;
+            if (!cName) return showToast("Βάλε Πελάτη", 'error');
+
+            try {
+                // Find/Create Client
+                let cId = clients.find(c => c.name.toLowerCase() === cName.toLowerCase())?.id;
+                if (!cId) {
+                    const { data: nc } = await sb.from('customers').insert({ name: cName }).select().single();
+                    cId = nc.id;
+                }
+
+                const data = {
+                    client_id: cId,
+                    description: document.getElementById('inpTitle').value,
+                    total_pieces: parseFloat(document.getElementById('inpQty').value),
+                    completed_pieces: parseFloat(document.getElementById('progressSlider').value),
+                    unit_price: parseFloat(document.getElementById('inpUnitPrice').value),
+                    sale_price: parseFloat(document.getElementById('resTotalPrice').innerText),
+                    deposit: parseFloat(document.getElementById('inpDeposit').value),
+                    is_paid: document.getElementById('chkPaid').checked,
+                    batch_pcs: parseFloat(document.getElementById('batchPcs').value),
+                    batch_mins: parseFloat(document.getElementById('bMins').value),
+                    materials_used: currentMats,
+                    extras_used: currentExtras,
+                    // Check completion logic
+                    status: (parseFloat(document.getElementById('progressSlider').value) >= parseFloat(document.getElementById('inpQty').value)) ? 'Completed' : 'Active'
+                };
+
+                // Inventory Logic: If moving to Completed state (and wasn't before), deduct stock? 
+                // Too complex for "Save". Let's rely on explicit "Complete" button for deduction, 
+                // OR deduct incrementally based on progress? 
+                // User asked for "Update warehouses".
+                // Simplest robust way: 
+                // If we save progress, we should ideally deduct ONLY the newly completed pieces. 
+                // BUT tracking "what was deducted" is hard without extra tables.
+                // DECISION: Deduct materials ONLY when clicking "Complete Order" (Finalize). 
+                // "Save" just updates text/money/progress display.
+
+                if (id) await sb.from('orders').update(data).eq('id', id);
+                else await sb.from('orders').insert(data);
+
+                closeModal(); loadData(); showToast("Αποθηκεύτηκε");
+
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function completeOrder() {
+            // Deduct Stock Logic
+            if (!confirm("Ολοκλήρωση & Αφαίρεση Υλικών από Αποθήκη;")) return;
+
+            // 1. Calculate Total Weight per Material ID
+            // Total Weight = (MatGramsPerBatch / BatchPcs) * TotalQty
+            const qty = parseFloat(document.getElementById('inpQty').value);
+            const bPcs = parseFloat(document.getElementById('batchPcs').value) || 1;
+
+            for (const m of currentMats) {
+                const totalGramsNeeded = (m.grams / bPcs) * qty;
+                // Fetch current weight
+                const { data: spool } = await sb.from('materials').select('current_weight').eq('id', m.id).single();
+                if (spool) {
+                    const newW = spool.current_weight - totalGramsNeeded;
+                    await sb.from('materials').update({ current_weight: newW }).eq('id', m.id);
+                }
+            }
+
+            // Update Status
+            document.getElementById('progressSlider').value = qty; // Max out progress
+            document.getElementById('chkPaid').checked = true; // Assume paid on close? Or optional? Let's not force paid.
+
+            await saveOrder(); // This will save as Completed
+        }
+
+        // Helpers
+        function toggleView() {
+            isArchivedView = !isArchivedView; renderOrders();
+            document.getElementById('viewToggleBtn').innerHTML = isArchivedView ? '<i class="fas fa-list mr-2"></i>Ενεργές' : '<i class="fas fa-archive mr-2"></i>Αρχείο';
+        }
         function closeModal() { document.getElementById('orderModal').classList.add('hidden'); }
+
+        // Hide Dropdown onClick outside
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('materialDropdown').contains(e.target) && e.target.id !== 'materialSearch')
+                document.getElementById('materialDropdown').classList.add('hidden');
+        });
 
     </script>
 </body>
+
 </html>
