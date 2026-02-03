@@ -26,16 +26,19 @@
     </a>
 
     <header
-        class="fixed top-0 left-0 right-0 bg-black/80 backdrop-blur-md z-40 px-6 py-4 border-b border-gray-800 flex justify-between items-center pl-20">
-        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
-            Παραγγελίες</h1>
-        <div class="flex gap-3">
+        class="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md z-40 px-4 py-3 border-b border-gray-800 flex justify-between items-center transition-all duration-300">
+        <div class="pl-16 md:pl-20"> <!-- Space for Back Button -->
+            <h1
+                class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                Παραγγελίες</h1>
+        </div>
+        <div class="flex gap-2">
             <button onclick="openNewModal()"
-                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-900/20 transition"><i
-                    class="fas fa-plus mr-2"></i>Νέα</button>
+                class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-lg shadow-blue-900/20 transition flex items-center gap-1">
+                <i class="fas fa-plus"></i> <span class="hidden sm:inline">Νέα</span></button>
             <button onclick="toggleView()" id="viewToggleBtn"
-                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-bold transition"><i
-                    class="fas fa-archive mr-2"></i>Αρχείο</button>
+                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1">
+                <i class="fas fa-archive"></i> <span class="hidden sm:inline">Αρχείο</span></button>
         </div>
     </header>
 
