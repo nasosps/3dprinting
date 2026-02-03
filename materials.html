@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+
         .gradient-text {
             background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
             -webkit-background-clip: text;
@@ -20,28 +22,32 @@
         }
     </style>
 </head>
+
 <body class="bg-[#09090b] text-white font-sans antialiased pb-20">
-    
+
     <!-- Back Button -->
-    <a href="index.html" class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
+    <a href="index.html"
+        class="fixed top-4 left-4 z-50 bg-gray-800/80 p-3 rounded-full text-white hover:bg-gray-700 transition shadow-lg backdrop-blur-md">
         <i class="fas fa-arrow-left"></i>
     </a>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <header class="flex justify-between items-center mb-10 pl-16"> <!-- Added pl-16 for back button space -->
             <div>
-                <h1 class="text-4xl font-black tracking-tighter mb-2"><span class="gradient-text">Αποθήκη Υλικών</span></h1>
+                <h1 class="text-4xl font-black tracking-tighter mb-2"><span class="gradient-text">Αποθήκη Υλικών</span>
+                </h1>
                 <p class="text-gray-400 font-medium">Διαχείριση Filament & Στοκ</p>
             </div>
-            <button onclick="openModal()" class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.2)] transition transform hover:scale-105 flex items-center gap-2">
+            <button onclick="openModal()"
+                class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.2)] transition transform hover:scale-105 flex items-center gap-2">
                 <i class="fas fa-plus"></i> <span class="hidden sm:inline">Νέο Υλικό</span>
             </button>
         </header>
 
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-           <!-- ... (Stats cards remain similar, maybe update via JS) ... -->
-           <!-- For brevity, I'm keeping the structure but the content is dynamic anyway -->
+            <!-- ... (Stats cards remain similar, maybe update via JS) ... -->
+            <!-- For brevity, I'm keeping the structure but the content is dynamic anyway -->
         </div>
 
         <div id="materialsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -50,48 +56,65 @@
     </div>
 
     <!-- Modal (Keep existing modal structure) -->
-    <div id="materialModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#18181b] rounded-3xl w-full max-w-lg border border-gray-800 shadow-2xl transform transition-all scale-100 p-8 relative">
-             <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition"><i class="fas fa-times text-xl"></i></button>
-             <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-white">Προσθήκη Υλικού</h2>
-             
-             <form id="materialForm" onsubmit="handleMaterialSubmit(event)" class="space-y-5">
-                 <input type="hidden" id="materialId">
-                 <div class="grid grid-cols-2 gap-4">
+    <div id="materialModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div
+            class="bg-[#18181b] rounded-3xl w-full max-w-lg border border-gray-800 shadow-2xl transform transition-all scale-100 p-8 relative">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition"><i
+                    class="fas fa-times text-xl"></i></button>
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-white">Προσθήκη Υλικού</h2>
+
+            <form id="materialForm" onsubmit="handleMaterialSubmit(event)" class="space-y-5">
+                <input type="hidden" id="materialId">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Μαρκα</label>
-                        <input type="text" id="brand" list="listBrands" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition" required placeholder="π.χ. Esun">
+                        <input type="text" id="brand" list="listBrands"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                            required placeholder="π.χ. Esun">
                         <datalist id="listBrands"></datalist>
                     </div>
                     <div>
                         <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Τυπος</label>
-                        <input type="text" id="type" list="listTypes" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition" required placeholder="π.χ. PLA+">
+                        <input type="text" id="type" list="listTypes"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                            required placeholder="π.χ. PLA+">
                         <datalist id="listTypes"></datalist>
                     </div>
-                 </div>
-                 
-                 <div>
+                </div>
+
+                <div>
                     <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Χρωμα</label>
                     <div class="flex gap-2">
-                        <input type="text" id="color" list="listColors" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition" required placeholder="π.χ. Black">
+                        <input type="text" id="color" list="listColors"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                            required placeholder="π.χ. Black">
                         <datalist id="listColors"></datalist>
-                        <input type="color" id="hexColor" class="h-[50px] w-[60px] rounded-xl bg-transparent border-0 cursor-pointer" value="#ffffff">
+                        <input type="color" id="hexColor"
+                            class="h-[50px] w-[60px] rounded-xl bg-transparent border-0 cursor-pointer" value="#ffffff">
                     </div>
-                 </div>
+                </div>
 
-                 <div class="grid grid-cols-2 gap-4">
-                     <div>
-                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Τιμη (€)</label>
-                        <input type="number" id="price" step="0.01" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition" required>
-                     </div>
-                     <div>
-                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Αρχικο Βαρος (g)</label>
-                        <input type="number" id="initial_weight" class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition" required value="1000">
-                     </div>
-                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Τιμη
+                            (€)</label>
+                        <input type="number" id="price" step="0.01"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Αρχικο Βαρος
+                            (g)</label>
+                        <input type="number" id="initial_weight"
+                            class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                            required value="1000">
+                    </div>
+                </div>
 
-                 <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] mt-4">Αποθήκευση</button>
-             </form>
+                <button type="submit"
+                    class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] mt-4">Αποθήκευση</button>
+            </form>
         </div>
     </div>
 
@@ -111,16 +134,16 @@
                 const { data: mats, error } = await sb.from('materials').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
 
-                list.innerHTML = ""; 
+                list.innerHTML = "";
                 uniqueBrands.clear(); uniqueTypes.clear(); uniqueColors.clear();
 
                 // Sort: Prioritize Active logic is handled inside groups, but global archive filter is here
                 const activeMats = mats.filter(m => m.current_weight > 0 || showArchived);
-                
+
                 // Collect unique values from ALL materials (even archived) for autocomplete
                 mats.forEach(m => {
-                    if (m.brand) uniqueBrands.add(m.brand); 
-                    if (m.type) uniqueTypes.add(m.type); 
+                    if (m.brand) uniqueBrands.add(m.brand);
+                    if (m.type) uniqueTypes.add(m.type);
                     if (m.color) uniqueColors.add(m.color);
                 });
 
@@ -154,10 +177,10 @@
                 Object.values(groups).forEach(g => {
                     const m = g.info;
                     const totalKg = (g.totalWeight / 1000).toFixed(2);
-                    const initW = m.initial_weight || 1000; 
+                    const initW = m.initial_weight || 1000;
                     // Calculate percentage relative to full spools count ideally, or just total weight / (count * initial)
                     const percent = g.count > 0 ? (g.totalWeight / (g.count * initW)) * 100 : 0;
-                    
+
                     const colorBar = percent < 20 ? 'bg-red-500' : (percent < 50 ? 'bg-yellow-500' : 'bg-green-500');
 
                     // Smart Sort inside the group: 
@@ -167,7 +190,7 @@
                     g.items.sort((a, b) => {
                         if (a.current_weight > 0 && b.current_weight <= 0) return -1;
                         if (b.current_weight > 0 && a.current_weight <= 0) return 1;
-                        
+
                         if (a.current_weight > 0) {
                             if (Math.abs(a.current_weight - b.current_weight) > 5) { // 5g tolerance
                                 return a.current_weight - b.current_weight; // Ascending weight
@@ -179,7 +202,7 @@
                     let itemsHtml = '';
                     g.items.forEach((item, idx) => {
                         const itemParams = JSON.stringify(item).replace(/"/g, "&quot;");
-                        
+
                         // Suggestion Badges
                         let badge = '';
                         if (item.current_weight > 0) {
@@ -231,8 +254,8 @@
                     </div>`;
                 });
 
-                updateDatalist('listBrands', uniqueBrands); 
-                updateDatalist('listTypes', uniqueTypes); 
+                updateDatalist('listBrands', uniqueBrands);
+                updateDatalist('listTypes', uniqueTypes);
                 updateDatalist('listColors', uniqueColors);
 
             } catch (e) {
@@ -249,7 +272,7 @@
         // --- Standard Create/Edit/Delete functions ---
         // (Assuming these rely on common functions or existing modal logic which is preserved)
         // ... Re-implementing necessary form handlers from existing code ...
-        
+
         function openModal() {
             document.getElementById('materialModal').classList.remove('hidden');
             document.getElementById('materialForm').reset();
@@ -303,18 +326,20 @@
         }
 
         function updateDatalist(id, set) {
-             const dl = document.getElementById(id);
-             dl.innerHTML = Array.from(set).map(v => `<option value="${v}">`).join('');
+            const dl = document.getElementById(id);
+            dl.innerHTML = Array.from(set).map(v => `<option value="${v}">`).join('');
         }
 
         document.getElementById('hexColor').addEventListener('input', (e) => {
-             // Optional: Put hex code into color text if user wants? 
-             // Currently separate.
+            // Optional: Put hex code into color text if user wants? 
+            // Currently separate.
         });
 
         // Initial Load
+        renderSidebar('materials');
         document.addEventListener('DOMContentLoaded', loadMaterials);
 
     </script>
 </body>
+
 </html>
