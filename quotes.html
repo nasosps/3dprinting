@@ -570,29 +570,41 @@
 
         async function convertToOrder(id) {
             if (!confirm("Μετατροπή σε Παραγγελία;")) return;
-            const { data: q } = await sb.from('quotes').select('*').eq('id', id).single();
-            if (q) {
-                const orderData = {
-                    client_id: q.client_id,
-                    description: q.title,
-                    total_pieces: q.qty,
-                    completed_pieces: 0,
-                    unit_price: q.unit_price,
-                    sale_price: q.total_price,
-                    total_cost: q.total_cost,
-                    status: 'active',
-                    batch_pcs: q.batch_pcs,
-                    batch_grams: q.batch_grams,
-                    batch_mins: q.batch_mins,
-                    materials_used: q.materials,
-                    extras_used: q.extras
-                };
+            try {
+                const { data: q, error: qError } = await sb.from('quotes').select('*').eq('id', id).single();
+                if (qError) throw qError;
+                
+                if (q) {
+                    // Prepare Order Data
+                    const orderData = {
+                        client_id: q.client_id,
+                        description: q.title,
+                        total_pieces: q.qty,
+                        completed_pieces: 0,
+                        unit_price: q.unit_price,
+                        sale_price: q.total_price,
+                        // total_cost: q.total_cost, // Removed as it might not exist in orders table
+                        deposit: 0,
+                        is_paid: false,
+                        status: 'Active', // Capitalized to match orders.html convention
+                        batch_pcs: q.batch_pcs,
+                        batch_grams: q.batch_grams,
+                        batch_mins: q.batch_mins,
+                        materials_used: q.materials,
+                        extras_used: q.extras
+                    };
 
-                await sb.from('orders').insert(orderData);
-                await sb.from('quotes').delete().eq('id', id);
+                    const { error: iError } = await sb.from('orders').insert(orderData);
+                    if (iError) throw iError;
 
-                alert("Έγινε!");
-                window.location.href = "orders.html";
+                    await sb.from('quotes').delete().eq('id', id);
+
+                    alert("Η μετατροπή έγινε επιτυχώς!");
+                    window.location.href = "orders.html";
+                }
+            } catch (e) {
+                console.error("CONVERT ERROR:", e);
+                alert("Σφάλμα κατά την μετατροπή: " + e.message);
             }
         }
     </script>
