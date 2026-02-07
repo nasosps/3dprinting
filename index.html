@@ -71,6 +71,44 @@
         </div>
     </div>
 
+    <div class="fixed bottom-8 right-6 flex flex-col gap-4 z-30">
+        <button onclick="openQuickModal()"
+            class="w-16 h-16 bg-purple-600 rounded-full flex justify-center items-center shadow-[0_0_25px_rgba(147,51,234,0.6)] hover:scale-110 transition text-white text-2xl"
+            title="Γρήγορη Καταγραφή">
+            <i class="fas fa-bolt"></i>
+        </button>
+    </div>
+
+    <!-- Quick Log Modal -->
+    <div id="quickModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center">
+        <div class="bg-[#18181b] p-6 rounded-2xl border border-gray-700 w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-xl font-bold text-purple-400 mb-4 text-center">Γρήγορη Καταγραφή</h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase block mb-2">Υλικό</label>
+                    <select id="quickMatSel"
+                        class="w-full p-3 rounded-xl bg-[#27272a] border border-gray-600 text-white outline-none focus:border-purple-500"></select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase block mb-2">Βάρος (gr)</label>
+                    <input type="number" id="quickGrams"
+                        class="w-full p-3 rounded-xl bg-[#27272a] border border-gray-600 text-white text-center text-xl font-bold focus:border-purple-500 outline-none"
+                        placeholder="0">
+                </div>
+                <button onclick="saveQuickPrint()"
+                    class="w-full bg-purple-600 py-3 rounded-xl font-bold text-white hover:bg-purple-500 transition shadow-lg mt-2">
+                    <i class="fas fa-check mr-2"></i> Αφαίρεση
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('quickModal').classList.add('hidden')"
+                class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+    </div>
+
     <script src="common.js"></script>
     <script>
         renderSidebar('dashboard');
@@ -82,12 +120,47 @@
             const { count: quoteCount } = await sb.from('quotes').select('*', { count: 'exact', head: true });
             document.getElementById('dashQuotesCount').innerText = quoteCount || 0;
 
-            const { data: mats } = await sb.from('materials').select('current_weight');
+            const { data: mats } = await sb.from('materials').select('id, brand, type, color, current_weight');
             let low = 0;
-            if (mats) mats.forEach(m => { if (m.current_weight < 200) low++; });
+            const matSel = document.getElementById('quickMatSel');
+            matSel.innerHTML = '<option value="">-- Επίλεξε --</option>';
+
+            if (mats) mats.forEach(m => {
+                if (m.current_weight < 200) low++;
+                matSel.innerHTML += `<option value="${m.id}">${m.color} (${m.brand} ${m.type}) - ${Math.round(m.current_weight)}g</option>`;
+            });
             document.getElementById('dashLowStock').innerText = low;
         }
         setTimeout(loadStats, 500);
+
+        function openQuickModal() {
+            document.getElementById('quickGrams').value = "";
+            document.getElementById('quickModal').classList.remove('hidden');
+        }
+
+        async function saveQuickPrint() {
+            const mId = document.getElementById('quickMatSel').value;
+            const g = parseFloat(document.getElementById('quickGrams').value);
+
+            if (!mId || !g) return showToast("Λείπουν στοιχεία", 'error');
+
+            try {
+                // Fetch current first to allow simple subtraction
+                const { data: mat, error: fError } = await sb.from('materials').select('current_weight').eq('id', mId).single();
+                if (fError) throw fError;
+
+                const newWeight = mat.current_weight - g;
+                const { error: uError } = await sb.from('materials').update({ current_weight: newWeight }).eq('id', mId);
+                if (uError) throw uError;
+
+                showToast(`Αφαιρέθηκαν ${g}g!`, 'success');
+                document.getElementById('quickModal').classList.add('hidden');
+                loadStats(); // Update low stock counter and dropdown list
+            } catch (e) {
+                console.error(e);
+                showToast("Σφάλμα: " + e.message, 'error');
+            }
+        }
     </script>
 </body>
 

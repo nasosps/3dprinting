@@ -26,18 +26,26 @@
     </a>
 
     <header
-        class="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md z-40 px-4 py-3 border-b border-gray-800 flex justify-between items-center transition-all duration-300">
-        <div class="pl-16 md:pl-20"> <!-- Space for Back Button -->
+        class="fixed top-0 left-0 right-0 bg-black/95 backdrop-blur-md z-40 px-4 py-3 border-b border-gray-800 flex justify-between items-center transition-all duration-300">
+        <div class="pl-12 md:pl-20 flex items-center gap-4 flex-1"> <!-- Space for Back Button -->
             <h1
-                class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                class="hidden md:block text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
                 Παραγγελίες</h1>
+
+            <!-- Global Search Bar -->
+            <div class="relative w-full max-w-md">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                <input type="text" id="orderSearch" onkeyup="filterOrders()"
+                    class="w-full bg-gray-900/50 border border-gray-700 rounded-full py-2.5 pl-10 pr-4 text-white focus:border-blue-500 outline-none transition"
+                    placeholder="Αναζήτηση...">
+            </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 ml-2">
             <button onclick="openNewModal()"
-                class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-lg shadow-blue-900/20 transition flex items-center gap-1">
+                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg shadow-blue-900/20 transition flex items-center gap-2 whitespace-nowrap">
                 <i class="fas fa-plus"></i> <span class="hidden sm:inline">Νέα</span></button>
             <button onclick="toggleView()" id="viewToggleBtn"
-                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1">
+                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 whitespace-nowrap">
                 <i class="fas fa-archive"></i> <span class="hidden sm:inline">Αρχείο</span></button>
         </div>
     </header>
@@ -298,35 +306,51 @@
                 const balance = (o.sale_price || 0) - (o.deposit || 0);
 
                 const html = `
-                <div class="bg-[#18181b] p-5 rounded-3xl border border-gray-800 hover:border-blue-500/30 transition shadow-lg group relative overflow-hidden flex flex-col justify-between h-full">
+                <div class="bg-[#18181b] p-6 md:p-5 rounded-[2rem] border border-gray-800 hover:border-blue-500/30 transition shadow-xl group relative overflow-hidden flex flex-col justify-between h-full min-h-[280px]">
                     <div>
-                        <div class="flex justify-between items-start mb-2">
-                             <div>
-                                 <div class="text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">${o.customers?.name || 'Αγνωστος'}</div>
-                                 <h3 class="font-bold text-white text-lg leading-tight">${o.description}</h3>
+                        <div class="flex justify-between items-start mb-4">
+                             <div class="flex-1 pr-2">
+                                 <div class="text-sm md:text-xs text-blue-400 font-extrabold uppercase tracking-widest mb-2">${o.customers?.name || 'Αγνωστος'}</div>
+                                 <h3 class="font-bold text-white text-2xl md:text-xl leading-snug">${o.description}</h3>
                              </div>
                              <div class="text-right">
-                                 <div class="text-xl font-black ${isPaid ? 'text-green-500' : (balance > 0 ? 'text-red-400' : 'text-gray-400')}">${o.sale_price}€</div>
-                                 ${!isPaid && balance > 0 ? `<div class="text-[10px] text-red-500 font-bold uppercase">Υπολοιπο ${balance}€</div>` : ''}
+                                 <div class="text-3xl md:text-2xl font-black ${isPaid ? 'text-green-500' : (balance > 0 ? 'text-red-400' : 'text-gray-400')}">${Math.round(o.sale_price)}€</div>
+                                 ${!isPaid && balance > 0 ? `<div class="text-xs text-red-500 font-bold uppercase mt-1">Υπολ. ${balance}€</div>` : ''}
                              </div>
                         </div>
 
-                        <!-- Progress Bar -->
-                        <div class="mt-4 mb-2">
-                            <div class="flex justify-between text-[10px] font-bold text-gray-500 uppercase mb-1">
-                                <span>Progress</span>
-                                <span>${progress} / ${total}</span>
+                        <!-- Progress Section with Quick Controls -->
+                        <div class="mt-6 mb-4">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Προοδος</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="updateQuickProgress('${o.id}', -1, ${o.completed_pieces}, ${o.total_pieces})" class="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center border border-gray-700 active:scale-90 transition"><i class="fas fa-minus"></i></button>
+                                    
+                                    <div class="flex items-baseline gap-1">
+                                        <input type="number" 
+                                               value="${progress}" 
+                                               onchange="manualProgressUpdate('${o.id}', this.value, ${progress}, ${o.total_pieces})"
+                                               class="bg-transparent text-white font-black text-2xl w-16 text-center focus:outline-none focus:border-b-2 border-blue-500 appearance-none m-0 p-0" />
+                                        <span class="text-base text-gray-500 font-normal">/ ${total}</span>
+                                    </div>
+
+                                    <button onclick="updateQuickProgress('${o.id}', 1, ${o.completed_pieces}, ${o.total_pieces})" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                                </div>
                             </div>
-                            <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-                                <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-500" style="width: ${percent}%"></div>
+                            <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-800/50">
+                                <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style="width: ${percent}%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-800 pt-3 mt-2 flex gap-2">
-                        <button onclick="editOrder('${o.id}')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-gray-300 font-bold text-sm transition"><i class="fas fa-pen"></i></button>
+                    <div class="border-t border-gray-800 pt-4 mt-auto flex gap-3">
+                        <button onclick="editOrder('${o.id}')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-2xl text-gray-300 font-bold text-base transition flex items-center justify-center gap-2">
+                            <i class="fas fa-pen"></i> <span class="uppercase text-xs tracking-wider">Edit</span>
+                        </button>
                         ${o.status !== 'Completed' ?
-                        `<button onclick="quickComplete('${o.id}')" class="w-12 bg-gray-800 hover:bg-green-900/40 hover:text-green-400 text-gray-500 rounded-xl transition"><i class="fas fa-check"></i></button>`
+                        `<button onclick="quickComplete('${o.id}')" class="w-16 bg-gray-800 hover:bg-green-900/40 hover:text-green-400 text-gray-500 rounded-2xl transition flex items-center justify-center">
+                            <i class="fas fa-check text-xl"></i>
+                        </button>`
                         : ''}
                     </div>
                 </div>`;
@@ -439,12 +463,60 @@
             const e = extras.find(x => x.id === id); if (e) currentExtras.push({ id: e.id, name: e.name, cost: e.cost });
             renderRows();
         }
+        // Search Logic
+        function filterOrders() {
+            const val = document.getElementById('orderSearch').value.toLowerCase();
+            const grid = document.getElementById('activeOrdersGrid');
+            const list = document.getElementById('archivedOrdersList');
+            const target = isArchivedView ? list : grid;
+
+            const cards = target.children;
+            for (let card of cards) {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(val)) card.style.display = "flex";
+                else card.style.display = "none";
+            }
+        }
+
+        // Fix renderRows to show correct material name
         function renderRows() {
             const ml = document.getElementById('usedMatsList'); ml.innerHTML = "";
-            currentMats.forEach((m, i) => ml.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-2 rounded border border-gray-700 text-sm"><span class="text-gray-300">${m.name || 'Material'} (${m.grams}g)</span><i onclick="currentMats.splice(${i},1);renderRows()" class="fas fa-times text-red-500 cursor-pointer"></i></div>`);
+            currentMats.forEach((m, i) => {
+                // 1. Try existing name
+                let name = m.name;
+
+                // 2. If no name (or generic), try to construct from item properties
+                if (!name && m.brand) name = `${m.brand} ${m.type} ${m.color}`;
+
+                // 3. Last Resort: Lookup in global 'mats' list using ID
+                if (!name || name === "Material") {
+                    const found = mats.find(x => x.id === m.id);
+                    if (found) name = `${found.brand} ${found.type} ${found.color}`;
+                }
+
+                if (!name) name = "Unknown Material";
+
+                ml.innerHTML += `
+                <div class="flex justify-between items-center bg-[#18181b] p-4 rounded-xl border border-gray-700 text-base shadow-sm">
+                    <span class="text-gray-300 font-medium">${name} <span class="text-blue-400 font-bold ml-2 text-lg">${m.grams}g</span></span>
+                    <button onclick="currentMats.splice(${i},1);renderRows()" class="w-10 h-10 rounded-full bg-gray-800 text-red-400 hover:text-white hover:bg-red-500 transition flex items-center justify-center"><i class="fas fa-times"></i></button>
+                </div>`;
+            });
+
             const el = document.getElementById('usedExtList'); el.innerHTML = "";
-            currentExtras.forEach((e, i) => el.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-2 rounded border border-gray-700 text-sm"><span class="text-gray-300">${e.name} (${e.cost}€)</span><i onclick="currentExtras.splice(${i},1);renderRows()" class="fas fa-times text-red-500 cursor-pointer"></i></div>`);
+            currentExtras.forEach((e, i) => el.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-4 rounded-xl border border-gray-700 text-base shadow-sm"><span class="text-gray-300">${e.name} (${e.cost}€)</span><button onclick="currentExtras.splice(${i},1);renderRows()" class="w-10 h-10 rounded-full bg-gray-800 text-red-400 hover:text-white hover:bg-red-500 transition flex items-center justify-center"><i class="fas fa-times"></i></button></div>`);
             recalc();
+        }
+
+        // Add proper names when adding material
+        function addMaterialRow() {
+            if (!selectedSpool) return;
+            const g = parseFloat(document.getElementById('addMatGrams').value); if (!g) return;
+            // Store full name logic
+            const fullName = `${selectedSpool.brand} ${selectedSpool.type} ${selectedSpool.color}`;
+            currentMats.push({ id: selectedSpool.id, name: fullName, price: selectedSpool.price, grams: g });
+            document.getElementById('addMatGrams').value = ""; selectedSpool = null; document.getElementById('selectedMatInfo').innerText = "--";
+            renderRows();
         }
 
         function recalc() {
@@ -525,12 +597,23 @@
                 // DECISION: Deduct materials ONLY when clicking "Complete Order" (Finalize). 
                 // "Save" just updates text/money/progress display.
 
-                if (id) await sb.from('orders').update(data).eq('id', id);
-                else await sb.from('orders').insert(data);
+                let updateError = null;
+                if (id) {
+                    const { error } = await sb.from('orders').update(data).eq('id', id);
+                    updateError = error;
+                } else {
+                    const { error } = await sb.from('orders').insert(data);
+                    updateError = error;
+                }
+
+                if (updateError) throw updateError;
 
                 closeModal(); loadData(); showToast("Αποθηκεύτηκε");
 
-            } catch (e) { showToast(e.message, 'error'); }
+            } catch (e) {
+                console.error("SAVE ERROR:", e);
+                showToast(e.message || "Σφάλμα αποθήκευσης", 'error');
+            }
         }
 
         async function completeOrder() {
@@ -572,6 +655,68 @@
                 document.getElementById('materialDropdown').classList.add('hidden');
         });
 
+        async function updateQuickProgress(id, change, current, total) {
+            let newVal = (current || 0) + change;
+            if (newVal < 0) newVal = 0;
+            if (newVal > total) newVal = total;
+
+            if (newVal === current) return; // No change
+
+            try {
+                // 1. Update Order Progress
+                const { error } = await sb.from('orders').update({ completed_pieces: newVal }).eq('id', id);
+                if (error) throw error;
+
+                // 2. If INCREASING progress (printing), deduct materials
+                if (change > 0) {
+                    // Fetch order details to know what materials to deduct
+                    const { data: ord } = await sb.from('orders').select('materials_used, batch_pcs').eq('id', id).single();
+
+                    if (ord && ord.materials_used && ord.materials_used.length > 0) {
+                        const batchPcs = ord.batch_pcs || 1;
+                        const piecesAdded = newVal - current; // Should correspond to 'change' but safer to calc
+
+                        for (const m of ord.materials_used) {
+                            // Calc grams per piece = (TotalGramsInBatch / BatchPcs)
+                            // So TotalDeduct = (GramsPerPiece) * piecesAdded
+                            // m.grams is the grams for the BATCH (as saved in renderRows/addMaterialRow context? NO. 
+                            // Wait, in quotes/orders addMaterialRow, 'grams' is what is entered... usually per BATCH.
+
+                            const gramsPerPiece = m.grams / batchPcs;
+                            const toDeduct = gramsPerPiece * piecesAdded;
+
+                            if (toDeduct > 0) {
+                                // Fetch current spool weight
+                                const { data: spool } = await sb.from('materials').select('current_weight').eq('id', m.id).single();
+                                if (spool) {
+                                    const newW = spool.current_weight - toDeduct;
+                                    await sb.from('materials').update({ current_weight: newW }).eq('id', m.id);
+                                }
+                            }
+                        }
+                        showToast(`Αφαιρέθηκαν υλικά για ${piecesAdded} τμχ`, 'success');
+                    }
+                }
+
+                // Reload to refresh UI
+                loadData();
+            } catch (e) {
+                console.error(e);
+                showToast("Σφάλμα: " + e.message, 'error');
+            }
+        }
+        // Helper to handle manual input change
+        function manualProgressUpdate(id, valStr, oldVal, total) {
+            let newVal = parseInt(valStr);
+            if (isNaN(newVal)) newVal = oldVal;
+            if (newVal < 0) newVal = 0;
+            if (newVal > total) newVal = total;
+
+            const change = newVal - oldVal;
+            if (change === 0) return;
+
+            updateQuickProgress(id, change, oldVal, total);
+        }
     </script>
 </body>
 

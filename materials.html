@@ -32,15 +32,24 @@
     </a>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24"> <!-- Increased padding top to clear fixed Back Button -->
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
                 <h1 class="text-2xl md:text-4xl font-black tracking-tighter mb-1"><span class="gradient-text">Αποθήκη
                         Υλικών</span>
                 </h1>
                 <p class="text-gray-400 font-medium text-xs md:text-base">Διαχείριση Filament & Στοκ</p>
             </div>
+
+            <!-- Search Bar -->
+            <div class="relative w-full md:max-w-xs">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                <input type="text" id="matSearch" onkeyup="filterMaterials()"
+                    class="w-full bg-gray-900/50 border border-gray-700 rounded-full py-3 pl-10 pr-4 text-white focus:border-yellow-500 outline-none transition"
+                    placeholder="Αναζήτηση...">
+            </div>
+
             <button onclick="openModal()"
-                class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-4 md:py-3 md:px-6 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.2)] transition transform hover:scale-105 flex items-center gap-2 text-sm md:text-base">
+                class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.2)] transition transform hover:scale-105 flex items-center gap-2 text-sm md:text-base whitespace-nowrap">
                 <i class="fas fa-plus"></i> <span class="hidden sm:inline">Νέο Υλικό</span>
             </button>
         </header>
@@ -60,7 +69,7 @@
     <div id="materialModal"
         class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div
-            class="bg-[#18181b] rounded-3xl w-full max-w-lg border border-gray-800 shadow-2xl transform transition-all scale-100 p-8 relative">
+            class="bg-[#18181b] rounded-3xl w-full max-w-lg border border-gray-800 shadow-2xl transform transition-all scale-100 p-8 relative overflow-y-auto max-h-screen">
             <button onclick="closeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition"><i
                     class="fas fa-times text-xl"></i></button>
             <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-white">Προσθήκη Υλικού</h2>
@@ -111,6 +120,15 @@
                             class="w-full bg-[#27272a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
                             required value="1000">
                     </div>
+                </div>
+
+                <!-- Added: Current Weight Edit -->
+                <div id="divCurrentWeight" class="hidden">
+                    <label class="block text-yellow-500 text-xs font-bold uppercase tracking-wider mb-2">Τρεχον Βαρος
+                        (Override)</label>
+                    <input type="number" id="current_weight_edit"
+                        class="w-full bg-[#27272a] border border-yellow-500/50 rounded-xl px-4 py-3 text-yellow-500 font-bold focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
+                        placeholder="Αφήστε κενό για να μην αλλάξει">
                 </div>
 
                 <button type="submit"
@@ -279,6 +297,7 @@
             document.getElementById('materialForm').reset();
             document.getElementById('materialId').value = '';
             document.getElementById('modalTitle').innerText = 'Προσθήκη Υλικού';
+            document.getElementById('divCurrentWeight').classList.add('hidden');
         }
 
         function closeModal() {
@@ -294,6 +313,30 @@
             document.getElementById('color').value = m.color;
             document.getElementById('price').value = m.price;
             document.getElementById('initial_weight').value = m.initial_weight;
+
+            // Show Current Weight Edit
+            document.getElementById('divCurrentWeight').classList.remove('hidden');
+            document.getElementById('current_weight_edit').value = m.current_weight;
+        }
+
+        // Search Logic
+        function filterMaterials() {
+            const val = document.getElementById('matSearch').value.toLowerCase();
+            const list = document.getElementById('materialsList');
+            // Filter the CARDS (which are wrapped in divs inside the grid)
+            // But wait, the cards are grouping spools. 
+            // If the search matches Brand/Type/Color, show the whole Group card.
+
+            const cards = list.querySelectorAll('.group'); // The group div wrapper
+            // Note: The previous logic injected toggle buttons etc. So be careful selecting.
+            // Safest is to iterate all children and check content.
+
+            for (let card of list.children) {
+                if (card.tagName !== 'DIV' || card.classList.contains('col-span-full')) continue; // Skip controls
+                const text = card.innerText.toLowerCase();
+                if (text.includes(val)) card.style.display = "block";
+                else card.style.display = "none";
+            }
         }
 
         async function handleMaterialSubmit(e) {
@@ -307,6 +350,11 @@
                 initial_weight: parseFloat(document.getElementById('initial_weight').value),
             };
 
+            // If editing, checking for override current_weight
+            const curW = document.getElementById('current_weight_edit').value;
+            if (id && curW !== "") {
+                data.current_weight = parseFloat(curW);
+            }
             // New material: set current_weight = initial_weight
             if (!id) data.current_weight = data.initial_weight;
 
