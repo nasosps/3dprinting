@@ -376,8 +376,16 @@
             const uniqueOptions = {};
             matches.forEach(m => {
                 const key = `${m.brand} ${m.type} ${m.color}`;
-                if (!uniqueOptions[key] || uniqueOptions[key].current_weight < m.current_weight) {
+                // Logic: Prefer lowest weight > 0 (Active Spool)
+                if (!uniqueOptions[key]) {
                     uniqueOptions[key] = m;
+                } else {
+                    const uw = uniqueOptions[key].current_weight;
+                    const mw = m.current_weight;
+                    // If new is positive AND (current is empty OR new is less than current)
+                    if (mw > 0 && (uw <= 0 || mw < uw)) {
+                        uniqueOptions[key] = m;
+                    }
                 }
             });
 

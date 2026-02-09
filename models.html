@@ -256,8 +256,17 @@
             const unique = {};
             matches.forEach(m => {
                 const k = `${m.brand} ${m.type} ${m.color}`;
-                // Prefer active spools
-                if (!unique[k] || (unique[k].current_weight <= 0 && m.current_weight > 0) || (unique[k].current_weight < m.current_weight)) unique[k] = m;
+                // Logic: Prefer lowest weight > 0 (Active Spool)
+                if (!unique[k]) {
+                    unique[k] = m;
+                } else {
+                    const uw = unique[k].current_weight;
+                    const mw = m.current_weight;
+                    // If new is positive AND (current is empty OR new is less than current)
+                    if (mw > 0 && (uw <= 0 || mw < uw)) {
+                        unique[k] = m;
+                    }
+                }
             });
             Object.values(unique).forEach(m => {
                 const d = document.createElement('div');
