@@ -346,6 +346,8 @@
                                     </div>
 
                                     <button onclick="updateQuickProgress('${o.id}', 1, ${o.completed_pieces}, ${o.total_pieces})" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                                    
+                                    <button onclick="addBatchProgress('${o.id}', ${o.completed_pieces}, ${o.total_pieces})" class="w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition ml-1" title="Προσθήκη Πολλών"><i class="fas fa-layer-group"></i></button>
                                 </div>
                             </div>
                             <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-800/50">
@@ -752,6 +754,15 @@
             if (change === 0) return;
 
             updateQuickProgress(id, change, oldVal, total);
+        }
+
+        function addBatchProgress(id, current, total) {
+            const input = prompt("Πόσα κομμάτια να προσθέσω;", "10");
+            if (input === null) return; // Cancelled
+            const qty = parseInt(input);
+            if (isNaN(qty) || qty <= 0) return showToast("Άκυρη ποσότητα", 'error');
+
+            updateQuickProgress(id, qty, current, total);
         }
     </script>
 </body>
