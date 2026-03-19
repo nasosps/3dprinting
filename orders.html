@@ -593,14 +593,48 @@
                     cId = nc.id;
                 }
 
+                // Calculate Total Cost
+                let calcCost = 0;
+                // Materials
+                if (currentMats && currentMats.length > 0) {
+                    currentMats.forEach(m => {
+                        // Assuming m.price is per kg (1000g)
+                        // Cost = (Grams Used / 1000) * PricePerKg
+                        // If we don't know the price, assume 0 or try to find it?
+                        // m.price should be there from addMaterialRow
+                        const price = m.price || 0;
+                        const grams = m.grams || 0;
+                        calcCost += (grams / 1000) * price;
+                    });
+                }
+                // Extras
+                if (currentExtras && currentExtras.length > 0) {
+                    currentExtras.forEach(e => {
+                        calcCost += (e.cost || 0);
+                    });
+                }
+                // Multiply material cost by quantity (if materials listed were PER ITEM. 
+                // In this app, 'currentMats' usually represents materials for ONE item? 
+                // Let's check 'addMaterialRow'. It takes 'grams'. Usually per item.
+                // So multiply total calcCost by Quantity?
+                // WAIT: In 'recalc', total price = unit * qty.
+                // Materials are usually defined per printed part.
+                // So MaterialCostTotal = (MatCostPerPart * Qty) + Extras (Extras might be per item or global?)
+                // Let's assume Extras are per item too for simplicity unless specified.
+
+                const qty = parseFloat(document.getElementById('inpQty').value) || 1;
+                // calcCost above is "Cost Per Unit" roughly
+                const totalJobCost = calcCost * qty;
+
                 const data = {
                     client_id: cId,
                     description: document.getElementById('inpTitle').value,
-                    total_pieces: parseFloat(document.getElementById('inpQty').value),
+                    total_pieces: qty,
                     completed_pieces: parseFloat(document.getElementById('progressSlider').value),
                     unit_price: parseFloat(document.getElementById('inpUnitPrice').value),
                     sale_price: parseFloat(document.getElementById('resTotalPrice').innerText),
                     deposit: parseFloat(document.getElementById('inpDeposit').value),
+                    total_cost: totalJobCost, // <--- ADDED THIS
                     is_paid: document.getElementById('chkPaid').checked,
                     batch_pcs: parseFloat(document.getElementById('batchPcs').value),
                     batch_mins: parseFloat(document.getElementById('bMins').value),
@@ -765,6 +799,11 @@
             updateQuickProgress(id, qty, current, total);
         }
     </script>
+<!-- NAEL credit -->
+<div id="nael-credit" style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;width:fit-content;max-width:calc(100% - 24px);margin:20px auto 12px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,0.72);font-family:inherit;font-size:12px;line-height:1.4;font-weight:500;color:#102330;text-align:center;">
+  <span>created by NAEL -</span>
+  <a href="https://nasosps.github.io/page/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Link</a>
+</div>
 </body>
 
 </html>
