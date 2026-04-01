@@ -150,34 +150,49 @@
                     <div id="usedMatsList" class="mt-3 space-y-2"></div>
                 </div>
 
-                <!-- BATCH & EXTRAS -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-800/30 p-4 rounded-2xl border border-gray-600/30">
-                        <label class="text-xs text-gray-400 block mb-2 font-bold uppercase">Extras (€)</label>
-                        <div class="flex gap-2">
-                            <select id="addExtSel"
-                                class="w-full p-2 rounded-lg bg-[#27272a] border border-gray-600 text-xs"></select>
-                            <button onclick="addExtraRow()" class="bg-indigo-600 px-3 rounded-lg"><i
-                                    class="fas fa-plus"></i></button>
-                        </div>
-                        <div id="usedExtList" class="mt-2 space-y-1"></div>
+                <!-- BATCH SETUP -->
+                <div class="bg-gray-800/30 p-4 rounded-2xl border border-blue-900/30">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Batch Setup</span>
                     </div>
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div>
+                            <label class="text-[10px] text-gray-500 block text-center uppercase mb-1 font-bold">Τεμ/Batch</label>
+                            <input type="number" id="batchPcs" value="1"
+                                class="w-full p-2 bg-[#27272a] border border-gray-600 text-center rounded-xl font-bold focus:border-blue-500 outline-none"
+                                oninput="recalc()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 block text-center uppercase mb-1 font-bold">Total Gr</label>
+                            <input type="number" id="bGrams" readonly
+                                class="w-full p-2 bg-gray-900 border border-gray-700 text-center rounded-xl text-gray-400 cursor-not-allowed font-mono">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 block text-center uppercase mb-1 font-bold">Mins</label>
+                            <input type="number" id="bMins" value="0"
+                                class="w-full p-2 bg-[#27272a] border border-gray-600 text-center rounded-xl font-mono focus:border-blue-500 outline-none"
+                                oninput="recalc()">
+                        </div>
+                    </div>
+                    <div class="p-3 bg-[#18181b] rounded-xl border border-gray-700 border-dashed text-center">
+                        <div class="text-[10px] text-gray-500 uppercase mb-1 font-bold tracking-widest">ΑΝΑ ΤΕΜΑΧΙΟ</div>
+                        <div class="flex justify-center items-center gap-6 text-xl font-mono font-bold">
+                            <span class="text-white"><span id="resGrams">0.00</span><span class="text-xs text-gray-500 ml-1">g</span></span>
+                            <span class="text-gray-700">|</span>
+                            <span class="text-white"><span id="resMins">0.00</span><span class="text-xs text-gray-500 ml-1">min</span></span>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="bg-gray-800/30 p-4 rounded-2xl border border-gray-600/30">
-                        <label class="text-xs text-gray-400 block mb-2 font-bold uppercase">Εκτύπωση (Batch)</label>
-                        <div class="grid grid-cols-2 gap-2 text-center">
-                            <div>
-                                <div class="text-[10px] text-gray-500">TEM/BATCH</div><input type="number" id="batchPcs"
-                                    value="1" class="w-full bg-[#27272a] border border-gray-600 text-center rounded p-1"
-                                    oninput="recalc()">
-                            </div>
-                            <div>
-                                <div class="text-[10px] text-gray-500">MINS</div><input type="number" id="bMins"
-                                    value="0" class="w-full bg-[#27272a] border border-gray-600 text-center rounded p-1"
-                                    oninput="recalc()">
-                            </div>
-                        </div>
+                <!-- EXTRAS -->
+                <div class="bg-gray-800/30 p-4 rounded-2xl border border-indigo-900/30">
+                    <div class="text-xs text-indigo-400 font-bold mb-3 uppercase tracking-wider">Extras</div>
+                    <div class="flex gap-2">
+                        <select id="addExtSel"
+                            class="flex-grow p-3 rounded-xl bg-[#27272a] border border-gray-600 text-sm outline-none focus:border-indigo-500"></select>
+                        <button onclick="addExtraRow()" class="bg-indigo-600 w-12 h-10 rounded-xl text-white hover:bg-indigo-500 transition flex items-center justify-center"><i class="fas fa-plus"></i></button>
                     </div>
+                    <div id="usedExtList" class="mt-3 space-y-2"></div>
                 </div>
 
                 <!-- PROGRESS & FINANCIALS -->
@@ -216,6 +231,22 @@
                         <div class="text-right">
                             <label class="text-[10px] text-gray-500 font-bold uppercase block">Υπολοιπο</label>
                             <div class="text-xl font-bold text-red-400"><span id="resBalance">0.00</span>€</div>
+                        </div>
+                    </div>
+
+                    <!-- Cost / Profit / ROI -->
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-[#18181b] p-3 rounded-xl border border-gray-700">
+                            <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">ΚΟΣΤΟΣ</div>
+                            <div class="text-lg font-extrabold text-red-400"><span id="resTotalCost">0.00</span>€</div>
+                        </div>
+                        <div class="bg-[#18181b] p-3 rounded-xl border border-gray-700">
+                            <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">ΚΕΡΔΟΣ</div>
+                            <div class="text-lg font-extrabold text-green-400"><span id="resNetProfit">0.00</span>€</div>
+                        </div>
+                        <div class="bg-[#18181b] p-3 rounded-xl border border-gray-700">
+                            <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">ROI</div>
+                            <div class="text-lg font-extrabold text-yellow-500"><span id="resMargin">0</span>%</div>
                         </div>
                     </div>
 
@@ -474,13 +505,6 @@
             document.getElementById('materialDropdown').classList.add('hidden');
             document.getElementById('materialSearch').value = "";
         }
-        function addMaterialRow() {
-            if (!selectedSpool) return;
-            const g = parseFloat(document.getElementById('addMatGrams').value); if (!g) return;
-            currentMats.push({ id: selectedSpool.id, name: selectedSpool.name, price: selectedSpool.price, grams: g });
-            document.getElementById('addMatGrams').value = ""; selectedSpool = null; document.getElementById('selectedMatInfo').innerText = "--";
-            renderRows();
-        }
         function addExtraRow() {
             const id = document.getElementById('addExtSel').value;
             const e = extras.find(x => x.id === id); if (e) currentExtras.push({ id: e.id, name: e.name, cost: e.cost });
@@ -501,23 +525,15 @@
             }
         }
 
-        // Fix renderRows to show correct material name
         function renderRows() {
             const ml = document.getElementById('usedMatsList'); ml.innerHTML = "";
             currentMats.forEach((m, i) => {
-                // 1. Try existing name
                 let name = m.name;
-
-                // 2. If no name (or generic), try to construct from item properties
-                if (!name && m.brand) name = `${m.brand} ${m.type} ${m.color}`;
-
-                // 3. Last Resort: Lookup in global 'mats' list using ID
                 if (!name || name === "Material") {
                     const found = mats.find(x => x.id === m.id);
                     if (found) name = `${found.brand} ${found.type} ${found.color}`;
                 }
-
-                if (!name) name = "Unknown Material";
+                if (!name) name = "Υλικό";
 
                 ml.innerHTML += `
                 <div class="flex justify-between items-center bg-[#18181b] p-4 rounded-xl border border-gray-700 text-base shadow-sm">
@@ -527,7 +543,12 @@
             });
 
             const el = document.getElementById('usedExtList'); el.innerHTML = "";
-            currentExtras.forEach((e, i) => el.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-4 rounded-xl border border-gray-700 text-base shadow-sm"><span class="text-gray-300">${e.name} (${e.cost}€)</span><button onclick="currentExtras.splice(${i},1);renderRows()" class="w-10 h-10 rounded-full bg-gray-800 text-red-400 hover:text-white hover:bg-red-500 transition flex items-center justify-center"><i class="fas fa-times"></i></button></div>`);
+            currentExtras.forEach((e, i) => el.innerHTML += `<div class="flex justify-between items-center bg-[#18181b] p-4 rounded-xl border border-gray-700 text-base shadow-sm"><span class="text-gray-300">${e.name} <span class="text-indigo-400 font-bold ml-1">(${e.cost}€)</span></span><button onclick="currentExtras.splice(${i},1);renderRows()" class="w-10 h-10 rounded-full bg-gray-800 text-red-400 hover:text-white hover:bg-red-500 transition flex items-center justify-center"><i class="fas fa-times"></i></button></div>`);
+
+            // Update total grams
+            let sumG = 0; currentMats.forEach(m => sumG += (m.grams || 0));
+            document.getElementById('bGrams').value = sumG;
+
             recalc();
         }
 
@@ -547,12 +568,39 @@
             const uprice = parseFloat(document.getElementById('inpUnitPrice').value) || 0;
             const deposit = parseFloat(document.getElementById('inpDeposit').value) || 0;
             const isPaid = document.getElementById('chkPaid').checked;
+            const bPcs = parseFloat(document.getElementById('batchPcs').value) || 1;
+            const bMins = parseFloat(document.getElementById('bMins').value) || 0;
 
-            const total = uprice * qty;
-            let balance = total - deposit;
+            // Unit grams / mins
+            const totalGrams = parseFloat(document.getElementById('bGrams').value) || 0;
+            const unitGrams = totalGrams / bPcs;
+            const unitMins = bMins / bPcs;
+            document.getElementById('resGrams').innerText = unitGrams.toFixed(2);
+            document.getElementById('resMins').innerText = unitMins.toFixed(2);
+
+            // Cost calculation
+            let batchMatCost = 0;
+            currentMats.forEach(m => { batchMatCost += (m.grams || 0) * ((m.price || 0) / 1000); });
+            const unitMatCost = batchMatCost / bPcs;
+            let unitExtraCost = 0;
+            currentExtras.forEach(e => { unitExtraCost += (e.cost || 0); });
+            const powerCostUnit = (unitMins / 60) * 0.75;
+            const totalUnitCost = unitMatCost + unitExtraCost + powerCostUnit;
+            const totalCost = totalUnitCost * qty;
+            const totalPrice = uprice * qty;
+            const netProfit = totalPrice - totalCost;
+            const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+
+            document.getElementById('resTotalCost').innerText = totalCost.toFixed(2);
+            document.getElementById('resNetProfit').innerText = netProfit.toFixed(2);
+            const marginEl = document.getElementById('resMargin');
+            marginEl.innerText = Math.round(roi);
+            marginEl.className = roi >= 0 ? 'text-lg font-extrabold text-yellow-500' : 'text-lg font-extrabold text-red-500';
+
+            // Payment
+            let balance = totalPrice - deposit;
             if (isPaid) balance = 0;
-
-            document.getElementById('resTotalPrice').innerText = total.toFixed(2);
+            document.getElementById('resTotalPrice').innerText = totalPrice.toFixed(2);
             document.getElementById('resBalance').innerText = balance.toFixed(2);
 
             // Update Slider Max
@@ -593,38 +641,9 @@
                     cId = nc.id;
                 }
 
-                // Calculate Total Cost
-                let calcCost = 0;
-                // Materials
-                if (currentMats && currentMats.length > 0) {
-                    currentMats.forEach(m => {
-                        // Assuming m.price is per kg (1000g)
-                        // Cost = (Grams Used / 1000) * PricePerKg
-                        // If we don't know the price, assume 0 or try to find it?
-                        // m.price should be there from addMaterialRow
-                        const price = m.price || 0;
-                        const grams = m.grams || 0;
-                        calcCost += (grams / 1000) * price;
-                    });
-                }
-                // Extras
-                if (currentExtras && currentExtras.length > 0) {
-                    currentExtras.forEach(e => {
-                        calcCost += (e.cost || 0);
-                    });
-                }
-                // Multiply material cost by quantity (if materials listed were PER ITEM. 
-                // In this app, 'currentMats' usually represents materials for ONE item? 
-                // Let's check 'addMaterialRow'. It takes 'grams'. Usually per item.
-                // So multiply total calcCost by Quantity?
-                // WAIT: In 'recalc', total price = unit * qty.
-                // Materials are usually defined per printed part.
-                // So MaterialCostTotal = (MatCostPerPart * Qty) + Extras (Extras might be per item or global?)
-                // Let's assume Extras are per item too for simplicity unless specified.
-
+                // Use already-computed values from recalc()
                 const qty = parseFloat(document.getElementById('inpQty').value) || 1;
-                // calcCost above is "Cost Per Unit" roughly
-                const totalJobCost = calcCost * qty;
+                const totalJobCost = parseFloat(document.getElementById('resTotalCost').innerText) || 0;
 
                 const data = {
                     client_id: cId,
@@ -674,29 +693,34 @@
         }
 
         async function completeOrder() {
-            // Deduct Stock Logic
-            if (!confirm("Ολοκλήρωση & Αφαίρεση Υλικών από Αποθήκη;")) return;
+            if (!confirm("Ολοκλήρωση & Αφαίρεση Υλικών/Extras από Αποθήκη;")) return;
 
-            // 1. Calculate Total Weight per Material ID
-            // Total Weight = (MatGramsPerBatch / BatchPcs) * TotalQty
             const qty = parseFloat(document.getElementById('inpQty').value);
             const bPcs = parseFloat(document.getElementById('batchPcs').value) || 1;
+            const alreadyDone = parseFloat(document.getElementById('progressSlider').value) || 0;
+            const remaining = qty - alreadyDone;
 
-            for (const m of currentMats) {
-                const totalGramsNeeded = (m.grams / bPcs) * qty;
-                // Fetch current weight
-                const { data: spool } = await sb.from('materials').select('current_weight').eq('id', m.id).single();
-                if (spool) {
-                    const newW = spool.current_weight - totalGramsNeeded;
-                    await sb.from('materials').update({ current_weight: newW }).eq('id', m.id);
+            // Deduct filament for remaining pieces
+            if (remaining > 0) {
+                for (const m of currentMats) {
+                    const gramsForRemaining = (m.grams / bPcs) * remaining;
+                    const { data: spool } = await sb.from('materials').select('current_weight').eq('id', m.id).single();
+                    if (spool) {
+                        await sb.from('materials').update({ current_weight: spool.current_weight - gramsForRemaining }).eq('id', m.id);
+                    }
                 }
             }
 
-            // Update Status
-            document.getElementById('progressSlider').value = qty; // Max out progress
-            document.getElementById('chkPaid').checked = true; // Assume paid on close? Or optional? Let's not force paid.
+            // Deduct extras stock (1 unit per extra, once on completion)
+            for (const e of currentExtras) {
+                const { data: acc } = await sb.from('accessories').select('stock').eq('id', e.id).single();
+                if (acc && acc.stock > 0) {
+                    await sb.from('accessories').update({ stock: acc.stock - 1 }).eq('id', e.id);
+                }
+            }
 
-            await saveOrder(); // This will save as Completed
+            document.getElementById('progressSlider').value = qty;
+            await saveOrder();
         }
 
         // Helpers
@@ -736,41 +760,47 @@
 
             try {
                 // 1. Update Order Progress
-                const { error } = await sb.from('orders').update({ completed_pieces: newVal }).eq('id', id);
-                if (error) throw error;
+                const updateData = { completed_pieces: newVal };
 
-                // 2. If INCREASING progress (printing), deduct materials
+                // 2. If INCREASING progress, deduct filament per piece
                 if (change > 0) {
-                    // Fetch order details to know what materials to deduct
-                    const { data: ord } = await sb.from('orders').select('materials_used, batch_pcs').eq('id', id).single();
+                    const { data: ord } = await sb.from('orders').select('materials_used, extras_used, batch_pcs').eq('id', id).single();
 
                     if (ord && ord.materials_used && ord.materials_used.length > 0) {
                         const batchPcs = ord.batch_pcs || 1;
-                        const piecesAdded = newVal - current; // Should correspond to 'change' but safer to calc
+                        const piecesAdded = newVal - current;
 
                         for (const m of ord.materials_used) {
-                            // Calc grams per piece = (TotalGramsInBatch / BatchPcs)
-                            // So TotalDeduct = (GramsPerPiece) * piecesAdded
-                            // m.grams is the grams for the BATCH (as saved in renderRows/addMaterialRow context? NO. 
-                            // Wait, in quotes/orders addMaterialRow, 'grams' is what is entered... usually per BATCH.
-
-                            const gramsPerPiece = m.grams / batchPcs;
-                            const toDeduct = gramsPerPiece * piecesAdded;
-
+                            const toDeduct = (m.grams / batchPcs) * piecesAdded;
                             if (toDeduct > 0) {
-                                // Fetch current spool weight
                                 const { data: spool } = await sb.from('materials').select('current_weight').eq('id', m.id).single();
                                 if (spool) {
-                                    const newW = spool.current_weight - toDeduct;
-                                    await sb.from('materials').update({ current_weight: newW }).eq('id', m.id);
+                                    await sb.from('materials').update({ current_weight: spool.current_weight - toDeduct }).eq('id', m.id);
                                 }
                             }
                         }
-                        showToast(`Αφαιρέθηκαν υλικά για ${piecesAdded} τμχ`, 'success');
+                    }
+
+                    // 3. Auto-complete if all pieces done → also deduct extras stock
+                    if (newVal >= total) {
+                        updateData.status = 'Completed';
+                        if (ord && ord.extras_used) {
+                            for (const e of ord.extras_used) {
+                                const { data: acc } = await sb.from('accessories').select('stock').eq('id', e.id).single();
+                                if (acc && acc.stock > 0) {
+                                    await sb.from('accessories').update({ stock: acc.stock - 1 }).eq('id', e.id);
+                                }
+                            }
+                        }
+                        showToast('Παραγγελία ολοκληρώθηκε!', 'success');
+                    } else {
+                        showToast(`Αφαιρέθηκαν υλικά για ${newVal - current} τμχ`, 'success');
                     }
                 }
 
-                // Reload to refresh UI
+                const { error } = await sb.from('orders').update(updateData).eq('id', id);
+                if (error) throw error;
+
                 loadData();
             } catch (e) {
                 console.error(e);

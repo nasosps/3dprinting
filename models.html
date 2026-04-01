@@ -286,7 +286,8 @@
         function addMaterialRow() {
             if (!selectedSpool) return;
             const g = parseFloat(document.getElementById('addMatGrams').value); if (!g) return;
-            currentMats.push({ id: selectedSpool.id, name: selectedSpool.name, price: selectedSpool.price, grams: g });
+            const fullName = `${selectedSpool.brand} ${selectedSpool.type} ${selectedSpool.color}`;
+            currentMats.push({ id: selectedSpool.id, name: fullName, price: selectedSpool.price, grams: g });
             document.getElementById('addMatGrams').value = ""; selectedSpool = null; document.getElementById('selectedMatInfo').innerText = "--";
             renderRows();
         }

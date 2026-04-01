@@ -32,28 +32,29 @@
             <h1 class="text-3xl font-bold text-emerald-500">Οικονομική Επισκόπηση</h1>
             <select id="yearFilter" onchange="loadStats()"
                 class="bg-gray-800 text-white p-3 rounded-xl border border-gray-700 focus:border-emerald-500 outline-none shadow-sm">
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
             </select>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-[#27272a] p-6 rounded-3xl border border-gray-700 shadow-xl">
-                <div class="text-sm text-gray-400 uppercase font-bold mb-2">ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ</div>
-                <div class="text-3xl font-extrabold text-emerald-400" id="totalRev">0.00€</div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-[#27272a] p-5 rounded-3xl border border-gray-700 shadow-xl">
+                <div class="text-xs text-gray-400 uppercase font-bold mb-2 tracking-wider">Συνολικά Έσοδα</div>
+                <div class="text-2xl font-extrabold text-emerald-400" id="totalRev">0.00€</div>
+                <div class="text-xs text-gray-500 mt-1"><span id="completedCount">0</span> ολοκλ. παραγγελίες</div>
             </div>
-            <div class="bg-[#27272a] p-6 rounded-3xl border border-gray-700 shadow-xl">
-                <div class="text-sm text-gray-400 uppercase font-bold mb-2">ΚΑΘΑΡΟ ΚΕΡΔΟΣ</div>
-                <div class="text-3xl font-extrabold text-green-500" id="totalProfit">0.00€</div>
+            <div class="bg-[#27272a] p-5 rounded-3xl border border-gray-700 shadow-xl">
+                <div class="text-xs text-gray-400 uppercase font-bold mb-2 tracking-wider">Καθαρό Κέρδος</div>
+                <div class="text-2xl font-extrabold text-green-500" id="totalProfit">0.00€</div>
+                <div class="text-xs text-gray-500 mt-1">Μέσο ανά παραγγελία: <span id="avgOrder">0€</span></div>
             </div>
-            <div class="bg-[#27272a] p-6 rounded-3xl border border-gray-700 shadow-xl">
-                <div class="text-sm text-gray-400 uppercase font-bold mb-2">ΚΟΣΤΟΣ ΥΛΙΚΩΝ/ΡΕΥΜΑ</div>
-                <div class="text-3xl font-extrabold text-red-400" id="totalCost">0.00€</div>
+            <div class="bg-[#27272a] p-5 rounded-3xl border border-gray-700 shadow-xl">
+                <div class="text-xs text-gray-400 uppercase font-bold mb-2 tracking-wider">Κόστος Υλικών/Ρεύμα</div>
+                <div class="text-2xl font-extrabold text-red-400" id="totalCost">0.00€</div>
+                <div class="text-xs text-gray-500 mt-1">Μέσο κόστος: <span id="avgCost">0€</span></div>
             </div>
-            <div class="bg-[#27272a] p-6 rounded-3xl border border-gray-700 shadow-xl">
-                <div class="text-sm text-gray-400 uppercase font-bold mb-2">ROI (Margin)</div>
-                <div class="text-3xl font-extrabold text-yellow-500" id="avgMargin">0%</div>
+            <div class="bg-[#27272a] p-5 rounded-3xl border border-gray-700 shadow-xl">
+                <div class="text-xs text-gray-400 uppercase font-bold mb-2 tracking-wider">Margin</div>
+                <div class="text-2xl font-extrabold text-yellow-500" id="avgMargin">0%</div>
+                <div class="text-xs text-gray-500 mt-1">ROI: <span id="roiVal">0%</span></div>
             </div>
         </div>
 
@@ -82,98 +83,139 @@
 
         async function loadStats() {
             const year = document.getElementById('yearFilter').value;
-
-            // Get Orders (completed only for actual revenue?) - Let's use all 'completed' or 'active' for now? Usually financials track actual sales.
-            // Let's assume all orders in 'orders' table are valid sales for now, but maybe filter by date.
-
             const startStr = `${year}-01-01`;
-            const endStr = `${year}-12-31`;
+            const endStr = `${parseInt(year) + 1}-01-01`;
 
-            const { data: orders } = await sb.from('orders')
-                .select('*')
+            // Only count COMPLETED orders as actual revenue
+            const { data: orders, error } = await sb.from('orders')
+                .select('sale_price, total_cost, created_at')
+                .eq('status', 'Completed')
                 .gte('created_at', startStr)
-                .lte('created_at', endStr);
+                .lt('created_at', endStr);
 
-            if (!orders) return;
+            if (error) { console.error(error); return; }
+            if (!orders || orders.length === 0) {
+                document.getElementById('totalRev').innerText = '0.00€';
+                document.getElementById('totalProfit').innerText = '0.00€';
+                document.getElementById('totalCost').innerText = '0.00€';
+                document.getElementById('avgMargin').innerText = '0%';
+                document.getElementById('roiVal').innerText = '0%';
+                document.getElementById('completedCount').innerText = '0';
+                document.getElementById('avgOrder').innerText = '0€';
+                document.getElementById('avgCost').innerText = '0€';
+                renderCharts(Array(12).fill(0).map(() => ({ rev: 0, cost: 0, profit: 0 })), 0, 0);
+                return;
+            }
 
-            // Aggregates
             let tRev = 0, tCost = 0;
             const monthlyData = Array(12).fill(0).map(() => ({ rev: 0, cost: 0, profit: 0 }));
 
             orders.forEach(o => {
-                const date = new Date(o.created_at);
-                const mIdx = date.getMonth();
+                const mIdx = new Date(o.created_at).getMonth();
                 const price = o.sale_price || 0;
                 const cost = o.total_cost || 0;
-
                 tRev += price;
                 tCost += cost;
-
                 monthlyData[mIdx].rev += price;
                 monthlyData[mIdx].cost += cost;
                 monthlyData[mIdx].profit += (price - cost);
             });
 
             const tProfit = tRev - tCost;
-            const margin = tCost > 0 ? (tProfit / tCost) * 100 : 0;
+            const margin = tRev > 0 ? (tProfit / tRev) * 100 : 0;       // Margin = profit/revenue
+            const roi = tCost > 0 ? (tProfit / tCost) * 100 : 0;        // ROI = profit/cost
+            const count = orders.length;
 
-            // UI Updates
             document.getElementById('totalRev').innerText = tRev.toFixed(2) + '€';
             document.getElementById('totalProfit').innerText = tProfit.toFixed(2) + '€';
+            document.getElementById('totalProfit').className = `text-2xl font-extrabold ${tProfit >= 0 ? 'text-green-500' : 'text-red-500'}`;
             document.getElementById('totalCost').innerText = tCost.toFixed(2) + '€';
             document.getElementById('avgMargin').innerText = Math.round(margin) + '%';
-            document.getElementById('avgMargin').className = margin >= 0 ? "text-3xl font-extrabold text-yellow-500" : "text-3xl font-extrabold text-red-500";
+            document.getElementById('avgMargin').className = `text-2xl font-extrabold ${margin >= 0 ? 'text-yellow-500' : 'text-red-500'}`;
+            document.getElementById('roiVal').innerText = Math.round(roi) + '%';
+            document.getElementById('completedCount').innerText = count;
+            document.getElementById('avgOrder').innerText = (tRev / count).toFixed(2) + '€';
+            document.getElementById('avgCost').innerText = (tCost / count).toFixed(2) + '€';
 
-            // Charts
-            renderCharts(monthlyData, tRev, tCost);
+            renderCharts(monthlyData, tRev, tCost, tProfit);
         }
 
-        function renderCharts(mData, totalRev, totalCost) {
+        function renderCharts(mData, totalRev, totalCost, totalProfit) {
             const ctxBar = document.getElementById('barChart').getContext('2d');
             const ctxPie = document.getElementById('pieChart').getContext('2d');
 
             if (bChart) bChart.destroy();
             if (pChart) pChart.destroy();
 
-            // Bar Chart
+            const labels = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μαΐ', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+
             bChart = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    labels,
                     datasets: [
-                        { label: 'Έσοδα (€)', data: mData.map(d => d.rev), backgroundColor: '#10b981', borderRadius: 6 },
-                        { label: 'Κόστος (€)', data: mData.map(d => d.cost), backgroundColor: '#ef4444', borderRadius: 6 }
+                        { label: 'Έσοδα (€)', data: mData.map(d => d.rev), backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Κόστος (€)', data: mData.map(d => d.cost), backgroundColor: '#ef4444', borderRadius: 4 },
+                        {
+                            label: 'Κέρδος (€)', data: mData.map(d => d.profit),
+                            type: 'line', borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)',
+                            borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3, yAxisID: 'y'
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, grid: { color: '#3f3f46' }, ticks: { color: '#9ca3af' } }, x: { grid: { display: false }, ticks: { color: '#9ca3af' } } },
-                    plugins: { legend: { labels: { color: '#d1d5db' } } }
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#3f3f46' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    },
+                    plugins: { legend: { labels: { color: '#d1d5db', boxWidth: 12 } } }
                 }
             });
 
-            // Pie Chart (Profit vs Cost approx)
+            // Pie: only show if we have valid positive values
+            const profit = totalProfit || 0;
+            const cost = totalCost || 0;
+            const pieData = profit >= 0
+                ? [profit, cost]
+                : [0, cost];  // if loss, show only cost
+            const pieLabels = profit >= 0 ? ['Κέρδος', 'Κόστος'] : ['Ζημία', 'Κόστος'];
+            const pieColors = profit >= 0 ? ['#10b981', '#ef4444'] : ['#6b7280', '#ef4444'];
+
             pChart = new Chart(ctxPie, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Κέρδος', 'Κόστος'],
-                    datasets: [{
-                        data: [totalRev - totalCost, totalCost],
-                        backgroundColor: ['#10b981', '#ef4444'],
-                        borderWidth: 0
-                    }]
+                    labels: pieLabels,
+                    datasets: [{ data: pieData, backgroundColor: pieColors, borderWidth: 0 }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db' } } }
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#d1d5db', boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toFixed(2)}€`
+                            }
+                        }
+                    }
                 }
             });
         }
 
-        // Set current year and load
-        document.getElementById('yearFilter').value = new Date().getFullYear();
-        setTimeout(loadStats, 500);
+        // Build dynamic year list (current year back to 2024)
+        const currentYear = new Date().getFullYear();
+        const yearSel = document.getElementById('yearFilter');
+        for (let y = currentYear; y >= 2024; y--) {
+            yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+        }
+        yearSel.value = currentYear;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadStats);
+        } else {
+            loadStats();
+        }
 
     </script>
 <!-- NAEL credit -->

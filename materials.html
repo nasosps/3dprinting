@@ -381,7 +381,7 @@
                 loadMaterials();
                 showToast('Επιτυχής αποθήκευση!');
             } catch (err) {
-                alert('Error: ' + err.message);
+                showToast('Σφάλμα: ' + err.message, 'error');
             }
         }
 

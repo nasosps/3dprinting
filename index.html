@@ -125,7 +125,7 @@
         renderSidebar('dashboard');
 
         async function loadStats() {
-            const { count: activeCount } = await sb.from('orders').select('*', { count: 'exact', head: true }).neq('status', 'archived');
+            const { count: activeCount } = await sb.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'Active');
             document.getElementById('dashActiveCount').innerText = activeCount || 0;
 
             const { count: quoteCount } = await sb.from('quotes').select('*', { count: 'exact', head: true });
@@ -142,7 +142,11 @@
             });
             document.getElementById('dashLowStock').innerText = low;
         }
-        setTimeout(loadStats, 500);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadStats);
+        } else {
+            loadStats();
+        }
 
         function openQuickModal() {
             document.getElementById('quickGrams').value = "";

@@ -26,7 +26,8 @@
         <input type="email" id="email" placeholder="Email"
             class="w-full p-3 mb-3 rounded bg-gray-700 border border-gray-600 outline-none focus:border-green-500">
         <input type="password" id="pass" placeholder="Password"
-            class="w-full p-3 mb-4 rounded bg-gray-700 border border-gray-600 outline-none focus:border-green-500">
+            class="w-full p-3 mb-4 rounded bg-gray-700 border border-gray-600 outline-none focus:border-green-500"
+            onkeydown="if(event.key==='Enter') doLogin()">
         <button onclick="doLogin()"
             class="w-full bg-green-600 p-3 rounded font-bold hover:bg-green-500 transition">ΕΙΣΟΔΟΣ</button>
         <p id="error" class="text-red-500 text-sm mt-3"></p>

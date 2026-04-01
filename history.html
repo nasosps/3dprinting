@@ -152,7 +152,7 @@
                     ? '<span class="px-2 py-1 rounded bg-green-900/50 text-green-400 text-xs font-bold border border-green-700">ORDER</span>'
                     : '<span class="px-2 py-1 rounded bg-teal-900/50 text-teal-400 text-xs font-bold border border-teal-700">QUOTE</span>';
 
-                const statusColor = item.status === 'completed' || item.status === 'archived' ? 'text-gray-500 line-through' : 'text-white';
+                const statusColor = item.status === 'Completed' ? 'text-gray-500 line-through' : 'text-white';
 
                 list.innerHTML += `
                 <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
@@ -166,7 +166,11 @@
             });
         }
 
-        setTimeout(init, 500);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
 
     </script>
 <!-- NAEL credit -->

@@ -264,11 +264,6 @@
 
     <script src="common.js"></script>
     <script>
-        // Global Error Handler
-        window.onerror = function (message, source, lineno, colno, error) {
-            alert("JS Error: " + message + "\nLine: " + lineno);
-        };
-
         let mats = [], extras = [], currentMats = [], currentExtras = [], loadedPresets = {}, selectedSpool = null;
 
         renderSidebar('quotes');
@@ -314,7 +309,11 @@
                 alert("Σφάλμα κατά την φόρτωση: " + e.message);
             }
         }
-        setTimeout(init, 500);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
 
         async function loadQuotes() {
             const list = document.getElementById('quotesList');
@@ -367,10 +366,9 @@
             dd.classList.remove('hidden');
 
             const matches = mats.filter(m =>
-                m.brand.includes(val) ||
-                m.type.includes(val) ||
-                m.color.includes(val) ||
-                (m.name && m.name.toUpperCase().includes(val))
+                m.brand.toUpperCase().includes(val) ||
+                m.type.toUpperCase().includes(val) ||
+                m.color.toUpperCase().includes(val)
             );
 
             const uniqueOptions = {};
@@ -452,7 +450,8 @@
         function addMaterialRow() {
             if (!selectedSpool) return showToast("Διάλεξε χρώμα!", 'error');
             const g = parseFloat(document.getElementById('addMatGrams').value); if (!g) return;
-            currentMats.push({ id: selectedSpool.id, name: selectedSpool.name, price: selectedSpool.price, grams: g });
+            const fullName = `${selectedSpool.brand} ${selectedSpool.type} ${selectedSpool.color}`;
+            currentMats.push({ id: selectedSpool.id, name: fullName, price: selectedSpool.price, grams: g });
 
             document.getElementById('addMatGrams').value = "";
             document.getElementById('selectedMatInfo').innerText = "-- Επίλεξε από πάνω --";
@@ -536,6 +535,8 @@
 
         async function saveQuote() {
             const id = document.getElementById('editQuoteId').value;
+            if (!document.getElementById('inpTitle').value.trim()) return showToast("Βάλε τίτλο έργου", 'error');
+            if (!document.getElementById('selClient').value) return showToast("Επίλεξε πελάτη", 'error');
             const calcData = recalc();
             const qData = {
                 title: document.getElementById('inpTitle').value,
@@ -574,6 +575,7 @@
 
                 if (q.batch_pcs > 1) {
                     document.getElementById('isBatch').checked = true;
+                    toggleBatch();
                     document.getElementById('batchPcs').value = q.batch_pcs;
                     document.getElementById('bMins').value = q.batch_mins;
                 } else {
@@ -616,10 +618,9 @@
                     const { error: iError } = await sb.from('orders').insert(orderData);
                     if (iError) throw iError;
 
-                    await sb.from('quotes').delete().eq('id', id);
-
-                    alert("Η μετατροπή έγινε επιτυχώς!");
-                    window.location.href = "orders.html";
+                    // Quote kept for reference — navigate to orders
+                    showToast("Μετατράπηκε σε Παραγγελία!", 'success');
+                    setTimeout(() => { window.location.href = "orders.html"; }, 1000);
                 }
             } catch (e) {
                 console.error("CONVERT ERROR:", e);
