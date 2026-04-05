@@ -38,7 +38,7 @@ function AuthGate() {
   if (!session) return <Login />
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/3dprinting/">
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/orders" element={<Orders />} />
