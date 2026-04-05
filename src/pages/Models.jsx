@@ -21,7 +21,6 @@ function roiDot(roi) {
 function calcRoi(sell, cost) {
   return cost > 0 ? ((sell - cost) / cost) * 100 : 0
 }
-// extras ανά πλάκα → κόστος/τεμ = sum(extras.cost) / bPcs
 function extrasCostPerUnit(extras, bPcs) {
   return extras.reduce((s, e) => s + (e.cost || 0), 0) / (bPcs || 1)
 }
@@ -36,7 +35,7 @@ export default function Models() {
 
   const [sheet, setSheet] = useState(null)
   const [form, setForm] = useState(EMPTY)
-  const [formExtras, setFormExtras] = useState([]) // [{id, name, cost}]
+  const [formExtras, setFormExtras] = useState([])
   const [selExtra, setSelExtra] = useState('')
   const [delConfirm, setDelConfirm] = useState(null)
 
@@ -81,7 +80,6 @@ export default function Models() {
     if (!selExtra) return
     const acc = accessories.find(a => String(a.id) === String(selExtra))
     if (!acc) return
-    // avoid duplicates
     if (formExtras.find(e => String(e.id) === String(acc.id))) return
     setFormExtras(ex => [...ex, { id: acc.id, name: acc.name, cost: acc.cost || 0 }])
     setSelExtra('')
@@ -115,7 +113,6 @@ export default function Models() {
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
   }
 
-  // Live preview
   const preview = useMemo(() => {
     const bPcs = parseInt(form.batch_pcs) || 1
     const bGrams = parseFloat(form.batch_grams) || 0
@@ -134,11 +131,11 @@ export default function Models() {
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
   return (
-    <div className="p-4 pb-24">
+    <div className="p-4 pb-28">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-white">Templates</h1>
-        <button onClick={openAdd} className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm px-3 py-2 rounded-xl">
-          <Plus size={16} /> Νέο
+        <h1 className="text-2xl font-semibold text-white">Templates</h1>
+        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
+          <Plus size={18} /> Νέο
         </button>
       </div>
 
@@ -165,21 +162,21 @@ export default function Models() {
             <div key={m.id} className="bg-[#1a1a1f] rounded-xl p-4 border border-[#2e2e38]">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white">{m.name}</div>
-                  {matNames && <div className="text-xs text-gray-500 mt-0.5 truncate">{matNames}</div>}
-                  {extNames && <div className="text-xs text-gray-600 truncate">+ {extNames}</div>}
+                  <div className="text-base font-medium text-white">{m.name}</div>
+                  {matNames && <div className="text-sm text-gray-500 mt-0.5 truncate">{matNames}</div>}
+                  {extNames && <div className="text-sm text-gray-600 truncate">+ {extNames}</div>}
                 </div>
                 <div className="flex items-center gap-2 ml-2">
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-white">{sellPrice.toFixed(2)}€</div>
-                    <div className="text-xs text-gray-500">/τεμ.</div>
+                    <div className="text-base font-semibold text-white">{sellPrice.toFixed(2)}€</div>
+                    <div className="text-sm text-gray-500">/τεμ.</div>
                   </div>
-                  <button onClick={() => openEdit(m)} className="text-gray-500 active:text-white p-1"><Pencil size={15} /></button>
-                  <button onClick={() => setDelConfirm(m)} className="text-gray-500 active:text-red-400 p-1"><Trash2 size={15} /></button>
+                  <button onClick={() => openEdit(m)} className="text-gray-500 active:text-white p-2"><Pencil size={17} /></button>
+                  <button onClick={() => setDelConfirm(m)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={17} /></button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
+              <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
                 {unitGrams > 0 && <span>{unitGrams.toFixed(0)}g/τεμ.</span>}
                 {batchMins > 0 && <><span>·</span><span>{batchMins.toFixed(0)}λ/πλάκα</span></>}
                 <span>·</span><span>×{batchPcs} τεμ/πλάκα</span>
@@ -187,14 +184,14 @@ export default function Models() {
 
               {costPerUnit > 0 && (
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-gray-500">
                     Κόστος <span className="text-gray-300">{costPerUnit.toFixed(2)}€</span>
                     {' · '}
                     <span className={profitPerUnit >= 0 ? 'text-green-400' : 'text-red-400'}>
                       {profitPerUnit >= 0 ? '+' : ''}{profitPerUnit.toFixed(2)}€
                     </span>
                   </div>
-                  <div className={`flex items-center gap-1.5 text-sm font-semibold ${roiColor(roi)}`}>
+                  <div className={`flex items-center gap-1.5 text-base font-semibold ${roiColor(roi)}`}>
                     <div className={`w-2 h-2 rounded-full ${roiDot(roi)}`} />
                     ROI {roi.toFixed(0)}%
                   </div>
@@ -205,15 +202,14 @@ export default function Models() {
         })}
       </div>
 
-      {/* Add / Edit sheet */}
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Template' : 'Νέο Template'}>
         <div className="space-y-4">
           <Field label="Όνομα *" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} placeholder="π.χ. Φιγούρα δεινόσαυρος" />
 
           <div>
-            <label className="text-xs text-gray-400 block mb-1.5">Υλικό</label>
+            <label className="text-sm text-gray-400 block mb-1.5">Υλικό</label>
             <select value={form.material_id} onChange={e => setForm(f => ({ ...f, material_id: e.target.value }))}
-              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500">
+              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
               <option value="">-- Επιλογή υλικού --</option>
               {activeMats.map(m => (
                 <option key={m.id} value={m.id}>
@@ -233,33 +229,32 @@ export default function Models() {
             <Field label="Τιμή πώλησης/τεμ. (€)" value={form.sell_price} onChange={v => setForm(f => ({ ...f, sell_price: v }))} type="number" placeholder="0.00" />
           </div>
 
-          {/* Extras / Αξεσουάρ */}
           {accessories.length > 0 && (
             <div>
-              <label className="text-xs text-gray-400 block mb-1.5">Αξεσουάρ / Extras (ανά πλάκα)</label>
+              <label className="text-sm text-gray-400 block mb-1.5">Αξεσουάρ / Extras (ανά πλάκα)</label>
               <div className="flex gap-2">
                 <select value={selExtra} onChange={e => setSelExtra(e.target.value)}
-                  className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500">
+                  className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
                   <option value="">-- Επιλογή --</option>
                   {accessories.map(a => (
                     <option key={a.id} value={a.id}>{a.name} ({(a.cost || 0).toFixed(2)}€)</option>
                   ))}
                 </select>
                 <button onClick={addExtra} disabled={!selExtra}
-                  className="bg-violet-600 disabled:opacity-40 text-white px-3 py-2 rounded-xl">
-                  <Plus size={16} />
+                  className="bg-violet-600 disabled:opacity-40 text-white px-3 py-3 rounded-xl">
+                  <Plus size={18} />
                 </button>
               </div>
 
               {formExtras.length > 0 && (
                 <div className="mt-2 space-y-1.5">
                   {formExtras.map(e => (
-                    <div key={e.id} className="flex items-center justify-between bg-[#0f0f11] border border-[#2e2e38] rounded-lg px-3 py-2">
-                      <span className="text-sm text-gray-300">{e.name}</span>
+                    <div key={e.id} className="flex items-center justify-between bg-[#0f0f11] border border-[#2e2e38] rounded-lg px-3 py-2.5">
+                      <span className="text-base text-gray-300">{e.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">{(e.cost || 0).toFixed(2)}€/πλάκα</span>
-                        <button onClick={() => removeExtra(e.id)} className="text-gray-500 active:text-red-400">
-                          <X size={14} />
+                        <span className="text-sm text-gray-500">{(e.cost || 0).toFixed(2)}€/πλάκα</span>
+                        <button onClick={() => removeExtra(e.id)} className="text-gray-500 active:text-red-400 p-1">
+                          <X size={16} />
                         </button>
                       </div>
                     </div>
@@ -269,9 +264,8 @@ export default function Models() {
             </div>
           )}
 
-          {/* Live cost preview */}
           {(preview.bGrams > 0 || preview.bMins > 0 || preview.extrasCost > 0) && (
-            <div className="bg-[#0f0f11] border border-[#2e2e38] rounded-xl p-3 space-y-1.5 text-xs">
+            <div className="bg-[#0f0f11] border border-[#2e2e38] rounded-xl p-3 space-y-1.5 text-sm">
               <div className="text-gray-400 font-medium mb-2">Κόστος / τεμάχιο</div>
               {preview.bGrams > 0 && (
                 <div className="flex justify-between text-gray-400">
@@ -316,19 +310,18 @@ export default function Models() {
           )}
 
           <button onClick={save} disabled={!form.name || mut.isPending}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl">
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </button>
         </div>
       </BottomSheet>
 
-      {/* Delete confirm */}
       <BottomSheet open={!!delConfirm} onClose={() => setDelConfirm(null)} title="Διαγραφή template;">
-        <p className="text-gray-300 mb-6">Διαγραφή <strong className="text-white">{delConfirm?.name}</strong>; Δεν αναιρείται.</p>
+        <p className="text-gray-300 text-base mb-6">Διαγραφή <strong className="text-white">{delConfirm?.name}</strong>; Δεν αναιρείται.</p>
         <div className="flex gap-3">
-          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3 rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
+          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3.5 text-base rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
           <button onClick={() => delMut.mutate(delConfirm.id)} disabled={delMut.isPending}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white disabled:opacity-50">
+            className="flex-1 py-3.5 text-base rounded-xl bg-red-600 text-white disabled:opacity-50">
             {delMut.isPending ? '...' : 'Διαγραφή'}
           </button>
         </div>
@@ -340,9 +333,9 @@ export default function Models() {
 function Field({ label, value, onChange, type = 'text', placeholder }) {
   return (
     <div>
-      <label className="text-xs text-gray-400 block mb-1.5">{label}</label>
+      <label className="text-sm text-gray-400 block mb-1.5">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500" />
+        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500" />
     </div>
   )
 }

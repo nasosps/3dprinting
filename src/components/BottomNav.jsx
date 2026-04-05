@@ -21,13 +21,13 @@ export default function BottomNav() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
+              `flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
                 isActive ? 'text-violet-400' : 'text-gray-500'
               }`
             }
           >
-            <Icon size={18} strokeWidth={1.5} />
-            <span className="text-[9px] leading-tight text-center">{label}</span>
+            <Icon size={22} strokeWidth={1.5} />
+            <span className="text-[11px] leading-tight text-center">{label}</span>
           </NavLink>
         ))}
       </div>

@@ -44,11 +44,11 @@ export default function Quotes() {
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
   return (
-    <div className="p-4 pb-24">
+    <div className="p-4 pb-28">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-white">Προσφορές</h1>
-        <button onClick={openAdd} className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm px-3 py-2 rounded-xl">
-          <Plus size={16} /> Νέα
+        <h1 className="text-2xl font-semibold text-white">Προσφορές</h1>
+        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
+          <Plus size={18} /> Νέα
         </button>
       </div>
 
@@ -62,19 +62,19 @@ export default function Quotes() {
             <div key={q.id} className="bg-[#1a1a1f] rounded-xl p-4 border border-[#2e2e38]">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white">{clientName}</div>
-                  {q.title && <div className="text-sm text-gray-400 mt-0.5 truncate">{q.title}</div>}
-                  {q.qty > 0 && <div className="text-xs text-gray-500 mt-0.5">{q.qty} τεμ.</div>}
+                  <div className="text-base font-medium text-white">{clientName}</div>
+                  {q.title && <div className="text-base text-gray-400 mt-0.5 truncate">{q.title}</div>}
+                  {q.qty > 0 && <div className="text-sm text-gray-500 mt-0.5">{q.qty} τεμ.</div>}
                 </div>
                 <div className="flex items-center gap-2 ml-2">
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-white">{(q.total_price || 0).toFixed(2)}€</div>
-                    <span className={`text-xs inline-block px-2 py-0.5 rounded-full mt-1 ${status === 'Completed' ? 'text-green-400 bg-green-900/30' : 'text-yellow-400 bg-yellow-900/30'}`}>
+                    <div className="text-base font-semibold text-white">{(q.total_price || 0).toFixed(2)}€</div>
+                    <span className={`text-sm inline-block px-2 py-0.5 rounded-full mt-1 ${status === 'Completed' ? 'text-green-400 bg-green-900/30' : 'text-yellow-400 bg-yellow-900/30'}`}>
                       {status === 'Completed' ? 'Αποδεκτή' : 'Εκκρεμεί'}
                     </span>
                   </div>
-                  <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-1"><Pencil size={15} /></button>
-                  <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-1"><Trash2 size={15} /></button>
+                  <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-2"><Pencil size={18} /></button>
+                  <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
                 </div>
               </div>
             </div>
@@ -85,9 +85,9 @@ export default function Quotes() {
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Προσφοράς' : 'Νέα Προσφορά'}>
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-gray-400 block mb-1.5">Πελάτης</label>
+            <label className="text-sm text-gray-400 block mb-1.5">Πελάτης</label>
             <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
-              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500">
+              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
               <option value="">-- Επιλογή --</option>
               {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -98,23 +98,23 @@ export default function Quotes() {
             <Field label="Τιμή/τεμ. (€)" value={form.unit_price} onChange={v => setForm(f => ({ ...f, unit_price: v }))} type="number" placeholder="0.00" />
           </div>
           {form.qty && form.unit_price && (
-            <div className="bg-violet-900/20 border border-violet-800 rounded-xl px-4 py-3 text-sm text-violet-300">
+            <div className="bg-violet-900/20 border border-violet-800 rounded-xl px-4 py-3 text-base text-violet-300">
               Σύνολο: <strong>{(parseFloat(form.unit_price) * parseInt(form.qty) || 0).toFixed(2)}€</strong>
             </div>
           )}
           <button onClick={save} disabled={mut.isPending}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl">
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </button>
         </div>
       </BottomSheet>
 
       <BottomSheet open={!!delConfirm} onClose={() => setDelConfirm(null)} title="Διαγραφή;">
-        <p className="text-gray-300 mb-6">Διαγραφή προσφοράς <strong className="text-white">{delConfirm?.title}</strong>;</p>
+        <p className="text-gray-300 text-base mb-6">Διαγραφή προσφοράς <strong className="text-white">{delConfirm?.title}</strong>;</p>
         <div className="flex gap-3">
-          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3 rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
+          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3.5 text-base rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
           <button onClick={() => delMut.mutate(delConfirm.id)} disabled={delMut.isPending}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white disabled:opacity-50">
+            className="flex-1 py-3.5 text-base rounded-xl bg-red-600 text-white disabled:opacity-50">
             {delMut.isPending ? '...' : 'Διαγραφή'}
           </button>
         </div>
@@ -126,9 +126,9 @@ export default function Quotes() {
 function Field({ label, value, onChange, type = 'text', placeholder }) {
   return (
     <div>
-      <label className="text-xs text-gray-400 block mb-1.5">{label}</label>
+      <label className="text-sm text-gray-400 block mb-1.5">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500" />
+        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500" />
     </div>
   )
 }

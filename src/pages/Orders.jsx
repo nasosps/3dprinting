@@ -13,7 +13,7 @@ const EMPTY = { client_id: '', description: '', total_pieces: '', batch_pcs: '',
 function OrderCard({ order, onEdit, onDelete }) {
   const qc = useQueryClient()
   const [inputVal, setInputVal] = useState('')
-  const [inputMode, setInputMode] = useState(null) // 'add' | 'remove' | null
+  const [inputMode, setInputMode] = useState(null)
 
   const { mutate: update } = useMutation({
     mutationFn: ({ id, updates }) => updateOrder(id, updates),
@@ -31,7 +31,6 @@ function OrderCard({ order, onEdit, onDelete }) {
     const next = Math.max(0, Math.min(completed + delta, total))
     const updates = { completed_pieces: next }
 
-    // Αφαίρεση filament ανάλογα με τα τεμάχια που προστέθηκαν
     if (delta > 0) {
       const piecesAdded = next - completed
       const mats = Array.isArray(order.materials_used) ? order.materials_used : []
@@ -47,7 +46,6 @@ function OrderCard({ order, onEdit, onDelete }) {
         }
       }
 
-      // Ολοκλήρωση → status Completed + αφαίρεση stock αξεσουάρ
       if (next >= total) {
         updates.status = 'Completed'
         const extras = Array.isArray(order.extras_used) ? order.extras_used : []
@@ -77,44 +75,44 @@ function OrderCard({ order, onEdit, onDelete }) {
     <div className={`bg-[#1a1a1f] rounded-xl p-4 border ${isComplete ? 'border-green-800' : 'border-[#2e2e38]'}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-white truncate">{order.customers?.name || 'Άγνωστος'}</div>
+          <div className="text-base font-medium text-white truncate">{order.customers?.name || 'Άγνωστος'}</div>
           {order.description && <div className="text-sm text-gray-400 truncate">{order.description}</div>}
         </div>
         <div className="flex items-center gap-2 ml-2">
-          <div className="text-sm font-medium text-violet-400">{(order.sale_price || 0).toFixed(2)}€</div>
-          {isComplete && <CheckCircle size={16} className="text-green-400" />}
-          <button onClick={() => onEdit(order)} className="text-gray-500 active:text-white p-1"><Pencil size={15} /></button>
-          <button onClick={() => onDelete(order)} className="text-gray-500 active:text-red-400 p-1"><Trash2 size={15} /></button>
+          <div className="text-base font-medium text-violet-400">{(order.sale_price || 0).toFixed(2)}€</div>
+          {isComplete && <CheckCircle size={18} className="text-green-400" />}
+          <button onClick={() => onEdit(order)} className="text-gray-500 active:text-white p-2"><Pencil size={17} /></button>
+          <button onClick={() => onDelete(order)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={17} /></button>
         </div>
       </div>
 
       {total > 0 && (
         <>
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
             <span>{completed}/{total} τεμάχια</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="w-full bg-[#2e2e38] rounded-full h-2 mb-3">
-            <div className={`h-2 rounded-full transition-all ${isComplete ? 'bg-green-500' : 'bg-violet-500'}`} style={{ width: `${progress}%` }} />
+          <div className="w-full bg-[#2e2e38] rounded-full h-2.5 mb-3">
+            <div className={`h-2.5 rounded-full transition-all ${isComplete ? 'bg-green-500' : 'bg-violet-500'}`} style={{ width: `${progress}%` }} />
           </div>
 
           {/* Plate buttons */}
           <div className="flex items-center gap-2 mb-2">
             <button onClick={() => change(-piecesPerPlate)} disabled={completed <= 0}
-              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-[#2e2e38] text-gray-300 text-sm disabled:opacity-30">
-              <Minus size={14} /> πλάκα
+              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg bg-[#2e2e38] text-gray-300 text-base disabled:opacity-30">
+              <Minus size={16} /> πλάκα
             </button>
-            <div className="text-xs text-gray-500 px-1">×{piecesPerPlate}</div>
+            <div className="text-sm text-gray-500 px-1">×{piecesPerPlate}</div>
             <button onClick={() => change(+piecesPerPlate)} disabled={isComplete}
-              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-violet-900/50 text-violet-300 text-sm disabled:opacity-30">
-              <Plus size={14} /> πλάκα
+              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg bg-violet-900/50 text-violet-300 text-base disabled:opacity-30">
+              <Plus size={16} /> πλάκα
             </button>
           </div>
 
           {/* Manual piece input */}
           {inputMode ? (
             <div className="flex items-center gap-2">
-              <div className={`text-xs font-medium px-2 ${inputMode === 'add' ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`text-base font-medium px-2 ${inputMode === 'add' ? 'text-green-400' : 'text-red-400'}`}>
                 {inputMode === 'add' ? '+' : '−'}
               </div>
               <input
@@ -124,20 +122,20 @@ function OrderCard({ order, onEdit, onDelete }) {
                 onChange={e => setInputVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') applyInput(); if (e.key === 'Escape') { setInputMode(null); setInputVal('') } }}
                 placeholder="αριθμός τεμ."
-                className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500"
+                className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-lg px-3 py-2.5 text-white text-base focus:outline-none focus:border-violet-500"
               />
-              <button onClick={applyInput} className="bg-violet-600 text-white text-sm px-3 py-2 rounded-lg">OK</button>
-              <button onClick={() => { setInputMode(null); setInputVal('') }} className="text-gray-500 text-sm px-2 py-2">✕</button>
+              <button onClick={applyInput} className="bg-violet-600 text-white text-base px-3 py-2.5 rounded-lg">OK</button>
+              <button onClick={() => { setInputMode(null); setInputVal('') }} className="text-gray-500 text-base px-2 py-2.5">✕</button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <button onClick={() => setInputMode('remove')} disabled={completed <= 0}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-[#2e2e38] text-gray-400 text-xs disabled:opacity-30">
-                <Minus size={12} /> τεμ.
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#2e2e38] text-gray-400 text-sm disabled:opacity-30">
+                <Minus size={14} /> τεμ.
               </button>
               <button onClick={() => setInputMode('add')} disabled={isComplete}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-[#2e2e38] text-gray-400 text-xs disabled:opacity-30">
-                <Plus size={12} /> τεμ.
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#2e2e38] text-gray-400 text-sm disabled:opacity-30">
+                <Plus size={14} /> τεμ.
               </button>
             </div>
           )}
@@ -195,19 +193,19 @@ export default function Orders() {
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
   return (
-    <div className="p-4 pb-24">
+    <div className="p-4 pb-28">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-white">Παραγγελίες</h1>
+        <h1 className="text-2xl font-semibold text-white">Παραγγελίες</h1>
         <div className="flex items-center gap-2">
           {done.length > 0 && (
             <button onClick={() => setShowDone(s => !s)}
-              className="flex items-center gap-1.5 bg-[#2e2e38] text-gray-400 text-sm px-3 py-2 rounded-xl">
-              {showDone ? <EyeOff size={15} /> : <Eye size={15} />}
+              className="flex items-center gap-1.5 bg-[#2e2e38] text-gray-400 text-base px-3 py-2.5 rounded-xl">
+              {showDone ? <EyeOff size={17} /> : <Eye size={17} />}
               {done.length}
             </button>
           )}
-          <button onClick={openAdd} className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm px-3 py-2 rounded-xl">
-            <Plus size={16} /> Νέα
+          <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
+            <Plus size={18} /> Νέα
           </button>
         </div>
       </div>
@@ -216,7 +214,7 @@ export default function Orders() {
 
       {showDone && done.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-500 mb-2">Ολοκληρωμένες</h2>
+          <h2 className="text-base font-medium text-gray-500 mb-2">Ολοκληρωμένες</h2>
           <div className="space-y-3 opacity-60">{done.map(o => <OrderCard key={o.id} order={o} onEdit={openEdit} onDelete={setDelConfirm} />)}</div>
         </>
       )}
@@ -226,9 +224,9 @@ export default function Orders() {
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Παραγγελίας' : 'Νέα Παραγγελία'}>
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-gray-400 block mb-1.5">Πελάτης</label>
+            <label className="text-sm text-gray-400 block mb-1.5">Πελάτης</label>
             <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
-              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500">
+              className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
               <option value="">-- Επιλογή --</option>
               {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -243,23 +241,23 @@ export default function Orders() {
             <Field label="Προκαταβολή (€)" value={form.deposit} onChange={v => setForm(f => ({ ...f, deposit: v }))} type="number" placeholder="0.00" />
           </div>
           {form.total_pieces && form.unit_price && (
-            <div className="bg-violet-900/20 border border-violet-800 rounded-xl px-4 py-3 text-sm text-violet-300">
+            <div className="bg-violet-900/20 border border-violet-800 rounded-xl px-4 py-3 text-base text-violet-300">
               Σύνολο: <strong>{(parseFloat(form.unit_price) * parseInt(form.total_pieces) || 0).toFixed(2)}€</strong>
             </div>
           )}
           <button onClick={save} disabled={mut.isPending}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl">
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </button>
         </div>
       </BottomSheet>
 
       <BottomSheet open={!!delConfirm} onClose={() => setDelConfirm(null)} title="Διαγραφή παραγγελίας;">
-        <p className="text-gray-300 mb-6">Διαγραφή παραγγελίας του <strong className="text-white">{delConfirm?.customers?.name}</strong>; Δεν αναιρείται.</p>
+        <p className="text-gray-300 text-base mb-6">Διαγραφή παραγγελίας του <strong className="text-white">{delConfirm?.customers?.name}</strong>; Δεν αναιρείται.</p>
         <div className="flex gap-3">
-          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3 rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
+          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3.5 text-base rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
           <button onClick={() => delMut.mutate(delConfirm.id)} disabled={delMut.isPending}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white disabled:opacity-50">
+            className="flex-1 py-3.5 text-base rounded-xl bg-red-600 text-white disabled:opacity-50">
             {delMut.isPending ? '...' : 'Διαγραφή'}
           </button>
         </div>
@@ -271,9 +269,9 @@ export default function Orders() {
 function Field({ label, value, onChange, type = 'text', placeholder }) {
   return (
     <div>
-      <label className="text-xs text-gray-400 block mb-1.5">{label}</label>
+      <label className="text-sm text-gray-400 block mb-1.5">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500" />
+        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500" />
     </div>
   )
 }

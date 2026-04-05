@@ -53,35 +53,35 @@ export default function Materials() {
       <div key={m.id} className={`bg-[#1a1a1f] rounded-xl p-4 border ${isLow ? 'border-orange-800' : 'border-[#2e2e38]'} flex items-center justify-between`}>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-white">{label || 'Άγνωστο'}</span>
-            {isLow && <AlertTriangle size={14} className="text-orange-400" />}
+            <span className="text-base font-medium text-white">{label || 'Άγνωστο'}</span>
+            {isLow && <AlertTriangle size={16} className="text-orange-400" />}
           </div>
-          {m.price != null && <div className="text-xs text-gray-500 mt-0.5">{Number(m.price).toFixed(2)}€/kg</div>}
+          {m.price != null && <div className="text-sm text-gray-500 mt-0.5">{Number(m.price).toFixed(2)}€/kg</div>}
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-sm font-semibold ${isLow ? 'text-orange-400' : 'text-white'}`}>{weight.toFixed(0)}g</span>
-          <button onClick={() => openEdit(m)} className="text-gray-400 active:text-white p-1"><Pencil size={16} /></button>
-          <button onClick={() => setDelConfirm(m)} className="text-gray-400 active:text-red-400 p-1"><Trash2 size={16} /></button>
+          <span className={`text-base font-semibold ${isLow ? 'text-orange-400' : 'text-white'}`}>{weight.toFixed(0)}g</span>
+          <button onClick={() => openEdit(m)} className="text-gray-400 active:text-white p-2"><Pencil size={18} /></button>
+          <button onClick={() => setDelConfirm(m)} className="text-gray-400 active:text-red-400 p-2"><Trash2 size={18} /></button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 pb-24">
+    <div className="p-4 pb-28">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-white">Υλικά</h1>
-        <button onClick={openAdd} className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm px-3 py-2 rounded-xl">
-          <Plus size={16} /> Νέο
+        <h1 className="text-2xl font-semibold text-white">Υλικά</h1>
+        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
+          <Plus size={18} /> Νέο
         </button>
       </div>
 
       {materials.length === 0 && <div className="text-center text-gray-500 mt-16">Δεν υπάρχουν υλικά</div>}
-      {active.length > 0 && <div className="space-y-2 mb-4">{active.map(renderCard)}</div>}
+      {active.length > 0 && <div className="space-y-3 mb-4">{active.map(renderCard)}</div>}
       {archived.length > 0 && (
         <>
-          <h2 className="text-sm font-medium text-gray-500 mb-2">Αρχειοθετημένα</h2>
-          <div className="space-y-2 opacity-50">{archived.map(renderCard)}</div>
+          <h2 className="text-base font-medium text-gray-500 mb-2">Αρχειοθετημένα</h2>
+          <div className="space-y-3 opacity-50">{archived.map(renderCard)}</div>
         </>
       )}
 
@@ -94,18 +94,18 @@ export default function Materials() {
           <Field label="Αρχικό Βάρος (g)" value={form.initial_weight} onChange={v => setForm(f => ({ ...f, initial_weight: v }))} type="number" placeholder="1000" />
           <Field label="Τρέχον Βάρος (g)" value={form.current_weight} onChange={v => setForm(f => ({ ...f, current_weight: v }))} type="number" placeholder="1000" />
           <button onClick={save} disabled={mut.isPending}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-medium py-3 rounded-xl">
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </button>
         </div>
       </BottomSheet>
 
       <BottomSheet open={!!delConfirm} onClose={() => setDelConfirm(null)} title="Διαγραφή;">
-        <p className="text-gray-300 mb-6">Διαγραφή <strong className="text-white">{[delConfirm?.brand, delConfirm?.type, delConfirm?.color].filter(Boolean).join(' ')}</strong>;</p>
+        <p className="text-gray-300 text-base mb-6">Διαγραφή <strong className="text-white">{[delConfirm?.brand, delConfirm?.type, delConfirm?.color].filter(Boolean).join(' ')}</strong>;</p>
         <div className="flex gap-3">
-          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3 rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
+          <button onClick={() => setDelConfirm(null)} className="flex-1 py-3.5 text-base rounded-xl bg-[#2e2e38] text-gray-300">Ακύρωση</button>
           <button onClick={() => delMut.mutate(delConfirm.id)} disabled={delMut.isPending}
-            className="flex-1 py-3 rounded-xl bg-red-600 text-white disabled:opacity-50">
+            className="flex-1 py-3.5 text-base rounded-xl bg-red-600 text-white disabled:opacity-50">
             {delMut.isPending ? '...' : 'Διαγραφή'}
           </button>
         </div>
@@ -117,9 +117,9 @@ export default function Materials() {
 function Field({ label, value, onChange, type = 'text', placeholder }) {
   return (
     <div>
-      <label className="text-xs text-gray-400 block mb-1.5">{label}</label>
+      <label className="text-sm text-gray-400 block mb-1.5">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500" />
+        className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500" />
     </div>
   )
 }
