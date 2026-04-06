@@ -1,5 +1,5 @@
 // Shared cost form fields: template, materials (up to 4), batch, extras, live preview
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Plus, X } from 'lucide-react'
 
 const ELECTRICITY_COST_PER_H = 0.75
@@ -20,8 +20,11 @@ export function calcUnitCost({ batch_mins, batch_pcs, formMaterials, extras }) {
 
 export default function CostForm({ form, setForm, formMaterials, setFormMaterials, extras, setExtras, models, materials, accessories }) {
   const activeMats = (materials || []).filter(m => (m.current_weight || 0) > 0)
-  const [selMatId, setSelMatId] = useState('')
+  const [matSearch, setMatSearch] = useState('')
   const [selMatGrams, setSelMatGrams] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [selMatId, setSelMatId] = useState('')
+  const searchRef = useRef(null)
 
   const { unitCost, matCostBatch, elecCostBatch, maintCostBatch, extrasCost, bPcs, bGrams, bMins } = useMemo(
     () => calcUnitCost({ ...form, formMaterials, extras }),
@@ -65,6 +68,7 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
     setFormMaterials(prev => [...prev, { id: mat.id, name, price: mat.price || 0, grams: parseFloat(selMatGrams) }])
     setSelMatId('')
     setSelMatGrams('')
+    setMatSearch('')
   }
 
   function removeMaterial(id) {
@@ -94,31 +98,67 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
 
       {/* Materials (up to 4) */}
       <div>
-        <label className="text-sm text-gray-400 block mb-1.5">
-          Υλικά ({formMaterials.length}/4)
-        </label>
+        <label className="text-sm text-gray-400 block mb-1.5">Υλικά ({formMaterials.length}/4)</label>
         {formMaterials.length < 4 && (
-          <div className="flex gap-2 mb-2">
-            <select value={selMatId} onChange={e => setSelMatId(e.target.value)}
-              className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
-              <option value="">-- Υλικό --</option>
-              {activeMats
-                .filter(m => !formMaterials.find(fm => String(fm.id) === String(m.id)))
-                .map(m => (
-                  <option key={m.id} value={m.id}>
-                    {[m.brand, m.type, m.color].filter(Boolean).join(' ')} ({(m.price || 0).toFixed(2)}€/kg)
-                  </option>
-                ))}
-            </select>
-            <input
-              type="number" value={selMatGrams} onChange={e => setSelMatGrams(e.target.value)}
-              placeholder="g" min="0"
-              className="w-20 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-3.5 text-white text-base focus:outline-none focus:border-violet-500"
-            />
-            <button onClick={addMaterial} disabled={!selMatId || !selMatGrams}
-              className="bg-violet-600 disabled:opacity-40 text-white px-3 rounded-xl">
-              <Plus size={18} />
-            </button>
+          <div className="space-y-2 mb-2">
+            {/* Search box */}
+            <div className="relative">
+              <input
+                ref={searchRef}
+                type="text"
+                value={matSearch}
+                onChange={e => { setMatSearch(e.target.value); setShowDropdown(true); setSelMatId('') }}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                placeholder="Αναζήτηση υλικού..."
+                className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500"
+              />
+              {showDropdown && (() => {
+                const q = matSearch.toLowerCase()
+                const filtered = activeMats
+                  .filter(m => !formMaterials.find(fm => String(fm.id) === String(m.id)))
+                  .filter(m => !q || [m.brand, m.type, m.color].join(' ').toLowerCase().includes(q))
+                  .sort((a, b) => (a.current_weight || 0) - (b.current_weight || 0))
+                if (filtered.length === 0) return null
+                return (
+                  <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1a1a1f] border border-[#2e2e38] rounded-xl overflow-hidden shadow-xl">
+                    {filtered.slice(0, 6).map((m, i) => {
+                      const name = [m.brand, m.type, m.color].filter(Boolean).join(' ')
+                      const isLowest = i === 0
+                      return (
+                        <button
+                          key={m.id}
+                          onMouseDown={() => {
+                            setSelMatId(String(m.id))
+                            setMatSearch(name)
+                            setShowDropdown(false)
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#2e2e38] border-b border-[#2e2e38] last:border-0"
+                        >
+                          <div>
+                            <span className="text-white text-base">{name}</span>
+                            {isLowest && <span className="ml-2 text-xs text-orange-400">↓ λιγότερο</span>}
+                          </div>
+                          <span className="text-sm text-gray-500 ml-2">{(m.current_weight || 0).toFixed(0)}g</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </div>
+            {/* Grams + Add */}
+            <div className="flex gap-2">
+              <input
+                type="number" value={selMatGrams} onChange={e => setSelMatGrams(e.target.value)}
+                placeholder="Γραμμάρια (g)" min="0"
+                className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3.5 text-white text-base focus:outline-none focus:border-violet-500"
+              />
+              <button onClick={addMaterial} disabled={!selMatId || !selMatGrams}
+                className="bg-violet-600 disabled:opacity-40 text-white px-4 rounded-xl">
+                <Plus size={18} />
+              </button>
+            </div>
           </div>
         )}
         {formMaterials.length > 0 && (
