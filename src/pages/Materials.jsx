@@ -4,7 +4,7 @@ import { getMaterials, createMaterial, updateMaterial, deleteMaterial } from '..
 import { AlertTriangle, Plus, Pencil, Trash2 } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 
-const EMPTY = { brand: '', type: '', color: '', price: '', spool_weight: '1000', spool_count: '1', initial_weight: '', current_weight: '' }
+const EMPTY = { brand: '', type: '', color: '', price: '', spool_count: '1', initial_weight: '', current_weight: '' }
 
 export default function Materials() {
   const qc = useQueryClient()
@@ -26,14 +26,13 @@ export default function Materials() {
 
   function openAdd() { setForm(EMPTY); setSheet({ mode: 'add' }) }
   function openEdit(m) {
-    setForm({ brand: m.brand || '', type: m.type || '', color: m.color || '', price: m.price ?? '', spool_weight: '', spool_count: '', initial_weight: m.initial_weight ?? '', current_weight: m.current_weight ?? '' })
+    setForm({ brand: m.brand || '', type: m.type || '', color: m.color || '', price: m.price ?? '', spool_count: '', initial_weight: m.initial_weight ?? '', current_weight: m.current_weight ?? '' })
     setSheet({ mode: 'edit', item: m })
   }
 
   function save() {
-    const spoolW = parseFloat(form.spool_weight) || 0
     const spoolC = parseInt(form.spool_count) || 1
-    const totalW = spoolW > 0 ? spoolW * spoolC : (parseFloat(form.initial_weight) || 0)
+    const totalW = form.spool_count ? 1000 * spoolC : (parseFloat(form.initial_weight) || 0)
     const data = {
       brand: form.brand, type: form.type, color: form.color,
       price: parseFloat(form.price) || 0,
@@ -96,13 +95,10 @@ export default function Materials() {
           <Field label="Τιμή (€/kg)" value={form.price} onChange={v => setForm(f => ({ ...f, price: v }))} type="number" placeholder="20.00" />
           {sheet?.mode === 'add' ? (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Βάρος καρουλιού (g)" value={form.spool_weight} onChange={v => setForm(f => ({ ...f, spool_weight: v }))} type="number" placeholder="1000" />
-                <Field label="Αριθμός καρουλιών" value={form.spool_count} onChange={v => setForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
-              </div>
-              {form.spool_weight && form.spool_count && (
+              <Field label="Αριθμός καρουλιών (×1000g)" value={form.spool_count} onChange={v => setForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
+              {form.spool_count && (
                 <div className="bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-base text-gray-300">
-                  Σύνολο: <strong className="text-white">{(parseFloat(form.spool_weight) * parseInt(form.spool_count)).toFixed(0)}g</strong>
+                  Σύνολο: <strong className="text-white">{1000 * (parseInt(form.spool_count) || 1)}g</strong>
                 </div>
               )}
             </>

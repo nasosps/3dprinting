@@ -28,7 +28,7 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
   const [showDropdown, setShowDropdown] = useState(false)
   const [selMatId, setSelMatId] = useState('')
   const searchRef = useRef(null)
-  const [newMatForm, setNewMatForm] = useState(null) // null | { brand, type, color, price, spool_weight, spool_count }
+  const [newMatForm, setNewMatForm] = useState(null) // null | { brand, type, color, price, spool_count }
 
   const createMatMut = useMutation({
     mutationFn: createMaterial,
@@ -141,7 +141,7 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                       <button
                         onMouseDown={() => {
                           setShowDropdown(false)
-                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_weight: '1000', spool_count: '1' })
+                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_count: '1' })
                         }}
                         className="w-full px-4 py-3 text-left text-violet-400 text-base hover:bg-[#2e2e38]">
                         + Νέο υλικό "{matSearch}"
@@ -172,7 +172,7 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                       <button
                         onMouseDown={() => {
                           setShowDropdown(false)
-                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_weight: '1000', spool_count: '1' })
+                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_count: '1' })
                         }}
                         className="w-full px-4 py-3 text-left text-violet-400 text-sm hover:bg-[#2e2e38] border-t border-[#2e2e38]">
                         + Νέο υλικό
@@ -191,20 +191,17 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                   <NField label="Τύπος" value={newMatForm.type} onChange={v => setNewMatForm(f => ({ ...f, type: v }))} placeholder="PLA" />
                   <NField label="Χρώμα" value={newMatForm.color} onChange={v => setNewMatForm(f => ({ ...f, color: v }))} placeholder="Black" />
                   <NField label="€/kg" value={newMatForm.price} onChange={v => setNewMatForm(f => ({ ...f, price: v }))} type="number" placeholder="20" />
-                  <NField label="g/καρούλι" value={newMatForm.spool_weight} onChange={v => setNewMatForm(f => ({ ...f, spool_weight: v }))} type="number" placeholder="1000" />
-                  <NField label="Αρ. καρουλιών" value={newMatForm.spool_count} onChange={v => setNewMatForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
+                  <NField label="Αρ. καρουλιών (×1000g)" value={newMatForm.spool_count} onChange={v => setNewMatForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
                 </div>
-                {newMatForm.spool_weight && newMatForm.spool_count && (
-                  <div className="text-sm text-gray-400">
-                    Σύνολο: <span className="text-white font-medium">{(parseFloat(newMatForm.spool_weight) * parseInt(newMatForm.spool_count)).toFixed(0)}g</span>
-                  </div>
-                )}
+                <div className="text-sm text-gray-400">
+                  Σύνολο: <span className="text-white font-medium">{1000 * (parseInt(newMatForm.spool_count) || 1)}g</span>
+                </div>
                 <div className="flex gap-2">
                   <button onClick={() => setNewMatForm(null)} className="flex-1 py-2 rounded-lg bg-[#2e2e38] text-gray-300 text-sm">Ακύρωση</button>
                   <button
                     disabled={!newMatForm.brand || createMatMut.isPending}
                     onClick={() => {
-                      const total = (parseFloat(newMatForm.spool_weight) || 1000) * (parseInt(newMatForm.spool_count) || 1)
+                      const total = 1000 * (parseInt(newMatForm.spool_count) || 1)
                       createMatMut.mutate({
                         brand: newMatForm.brand, type: newMatForm.type, color: newMatForm.color,
                         price: parseFloat(newMatForm.price) || 0,
