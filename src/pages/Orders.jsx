@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { Minus, Plus, CheckCircle, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 
-const EMPTY = { client_id: '', description: '', total_pieces: '', batch_pcs: '', unit_price: '', deposit: '' }
+const EMPTY = { client_id: '', description: '', total_pieces: '', batch_pcs: '', unit_price: '', deposit: '', cost_per_unit: '' }
 
 function OrderCard({ order, onEdit, onDelete }) {
   const qc = useQueryClient()
@@ -167,13 +167,14 @@ export default function Orders() {
 
   function openAdd() { setForm(EMPTY); setSheet({ mode: 'add' }) }
   function openEdit(o) {
-    setForm({ client_id: o.client_id || '', description: o.description || '', total_pieces: o.total_pieces ?? '', batch_pcs: o.batch_pcs ?? '', unit_price: o.unit_price ?? '', deposit: o.deposit ?? '' })
+    setForm({ client_id: o.client_id || '', description: o.description || '', total_pieces: o.total_pieces ?? '', batch_pcs: o.batch_pcs ?? '', unit_price: o.unit_price ?? '', deposit: o.deposit ?? '', cost_per_unit: o.cost_per_unit ?? '' })
     setSheet({ mode: 'edit', item: o })
   }
 
   function save() {
     const qty = parseInt(form.total_pieces) || 0
     const uprice = parseFloat(form.unit_price) || 0
+    const costPerUnit = parseFloat(form.cost_per_unit) || 0
     const data = {
       client_id: form.client_id || null,
       description: form.description,
@@ -182,6 +183,8 @@ export default function Orders() {
       unit_price: uprice,
       sale_price: uprice * qty,
       deposit: parseFloat(form.deposit) || 0,
+      cost_per_unit: costPerUnit,
+      total_cost: costPerUnit * qty,
       status: 'Active',
     }
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
@@ -235,6 +238,15 @@ export default function Orders() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Τεμάχια" value={form.total_pieces} onChange={v => setForm(f => ({ ...f, total_pieces: v }))} type="number" placeholder="0" />
             <Field label="Τεμ/πλάκα" value={form.batch_pcs} onChange={v => setForm(f => ({ ...f, batch_pcs: v }))} type="number" placeholder="1" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Κόστος/τεμ. (€)" value={form.cost_per_unit} onChange={v => setForm(f => ({ ...f, cost_per_unit: v }))} type="number" placeholder="0.00" />
+            <div>
+              <label className="text-sm text-gray-400 block mb-1.5">Προτεινόμενη τιμή</label>
+              <div className="w-full bg-[#0f0f11] border border-violet-800 rounded-xl px-4 py-3.5 text-violet-400 text-base">
+                {form.cost_per_unit ? `${(parseFloat(form.cost_per_unit) * 2.8).toFixed(2)}€` : '—'}
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Τιμή/τεμ. (€)" value={form.unit_price} onChange={v => setForm(f => ({ ...f, unit_price: v }))} type="number" placeholder="0.00" />

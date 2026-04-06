@@ -311,6 +311,12 @@ export default function Models() {
                   </div>
                 </>
               )}
+              {preview.unitCost > 0 && (
+                <div className="flex justify-between border-t border-[#2e2e38] pt-1.5 text-violet-400 font-semibold">
+                  <span>Προτεινόμενη τιμή (ROI 180%)</span>
+                  <span>{(preview.unitCost * 2.8).toFixed(2)}€</span>
+                </div>
+              )}
               {preview.sell > 0 && !form.material_id && (
                 <div className="text-yellow-400">⚠ Επίλεξε υλικό για πλήρες κόστος</div>
               )}
