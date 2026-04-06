@@ -121,11 +121,12 @@ export default function Models() {
     const mat = materials.find(m => String(m.id) === String(form.material_id))
     const matCostBatch = (bGrams / 1000) * (mat?.price || 0)
     const elecCostBatch = (bMins / 60) * ELECTRICITY_COST_PER_H
+    const maintCostBatch = matCostBatch * 0.5
     const extrasCost = extrasCostPerUnit(formExtras, bPcs)
-    const unitCost = (matCostBatch + elecCostBatch) / bPcs + extrasCost
+    const unitCost = (matCostBatch + elecCostBatch + maintCostBatch) / bPcs + extrasCost
     const profit = sell - unitCost
     const roi = calcRoi(sell, unitCost)
-    return { matCostBatch, elecCostBatch, extrasCost, unitCost, profit, roi, bPcs, bGrams, bMins, sell }
+    return { matCostBatch, elecCostBatch, maintCostBatch, extrasCost, unitCost, profit, roi, bPcs, bGrams, bMins, sell }
   }, [form, materials, formExtras])
 
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
@@ -149,8 +150,9 @@ export default function Models() {
           const batchMins = m.batch_mins || (m.print_time_hours || 0) * 60
           const matCostBatch = mats.reduce((s, mat) => s + (mat.grams || 0) * ((mat.price || 0) / 1000), 0)
           const elecCostBatch = (batchMins / 60) * ELECTRICITY_COST_PER_H
+          const maintCostBatch = matCostBatch * 0.5
           const extCostUnit = extrasCostPerUnit(exts, batchPcs)
-          const costPerUnit = (matCostBatch + elecCostBatch) / batchPcs + extCostUnit
+          const costPerUnit = (matCostBatch + elecCostBatch + maintCostBatch) / batchPcs + extCostUnit
           const sellPrice = m.sell_price || m.unit_price || 0
           const profitPerUnit = sellPrice - costPerUnit
           const roi = calcRoi(sellPrice, costPerUnit)
@@ -277,6 +279,12 @@ export default function Models() {
                 <div className="flex justify-between text-gray-400">
                   <span>Ρεύμα ({(preview.bMins / preview.bPcs).toFixed(1)}λ)</span>
                   <span className="text-white">{(preview.elecCostBatch / preview.bPcs).toFixed(3)}€</span>
+                </div>
+              )}
+              {preview.maintCostBatch > 0 && (
+                <div className="flex justify-between text-gray-400">
+                  <span>Συντήρηση (50% υλικού)</span>
+                  <span className="text-white">{(preview.maintCostBatch / preview.bPcs).toFixed(3)}€</span>
                 </div>
               )}
               {preview.extrasCost > 0 && (
