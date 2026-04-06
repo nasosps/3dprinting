@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getMaterials, createMaterial, updateMaterial, deleteMaterial } from '../lib/api/materials'
 import { AlertTriangle, Plus, Pencil, Trash2 } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
+import AutocompleteField from '../components/AutocompleteField'
 
 const EMPTY = { brand: '', type: '', color: '', price: '', spool_count: '1', initial_weight: '', current_weight: '' }
 
@@ -89,8 +90,10 @@ export default function Materials() {
 
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Υλικού' : 'Νέο Υλικό'}>
         <div className="space-y-4">
-          <Field label="Brand" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} placeholder="π.χ. Bambu" />
-          <Field label="Τύπος" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))} placeholder="π.χ. PLA, PETG" />
+          <AutocompleteField label="Brand" value={form.brand} onChange={v => setForm(f => ({ ...f, brand: v }))} placeholder="π.χ. Bambu"
+            suggestions={[...new Set(materials.map(m => m.brand).filter(Boolean))]} />
+          <AutocompleteField label="Τύπος" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))} placeholder="π.χ. PLA, PETG"
+            suggestions={[...new Set(materials.map(m => m.type).filter(Boolean))]} />
           <Field label="Χρώμα" value={form.color} onChange={v => setForm(f => ({ ...f, color: v }))} placeholder="π.χ. Black" />
           <Field label="Τιμή (€/kg)" value={form.price} onChange={v => setForm(f => ({ ...f, price: v }))} type="number" placeholder="20.00" />
           {sheet?.mode === 'add' ? (

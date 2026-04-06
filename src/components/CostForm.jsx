@@ -3,6 +3,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { createMaterial } from '../lib/api/materials'
 import { Plus, X } from 'lucide-react'
+import AutocompleteField from './AutocompleteField'
 
 const ELECTRICITY_COST_PER_H = 0.75
 
@@ -186,11 +187,17 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
             {newMatForm && (
               <div className="bg-[#0f0f11] border border-violet-800 rounded-xl p-3 space-y-3">
                 <div className="text-sm font-medium text-violet-400">Νέο Υλικό</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <NField label="Brand" value={newMatForm.brand} onChange={v => setNewMatForm(f => ({ ...f, brand: v }))} placeholder="Bambu" />
-                  <NField label="Τύπος" value={newMatForm.type} onChange={v => setNewMatForm(f => ({ ...f, type: v }))} placeholder="PLA" />
-                  <NField label="Χρώμα" value={newMatForm.color} onChange={v => setNewMatForm(f => ({ ...f, color: v }))} placeholder="Black" />
-                  <NField label="€/kg" value={newMatForm.price} onChange={v => setNewMatForm(f => ({ ...f, price: v }))} type="number" placeholder="20" />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <SmallAutocomplete label="Brand" value={newMatForm.brand} onChange={v => setNewMatForm(f => ({ ...f, brand: v }))} placeholder="Bambu"
+                      suggestions={[...new Set((materials || []).map(m => m.brand).filter(Boolean))]} />
+                    <SmallAutocomplete label="Τύπος" value={newMatForm.type} onChange={v => setNewMatForm(f => ({ ...f, type: v }))} placeholder="PLA"
+                      suggestions={[...new Set((materials || []).map(m => m.type).filter(Boolean))]} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NField label="Χρώμα" value={newMatForm.color} onChange={v => setNewMatForm(f => ({ ...f, color: v }))} placeholder="Black" />
+                    <NField label="€/kg" value={newMatForm.price} onChange={v => setNewMatForm(f => ({ ...f, price: v }))} type="number" placeholder="20" />
+                  </div>
                   <NField label="Αρ. καρουλιών (×1000g)" value={newMatForm.spool_count} onChange={v => setNewMatForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
                 </div>
                 <div className="text-sm text-gray-400">
@@ -350,6 +357,33 @@ function NField({ label, value, onChange, type = 'text', placeholder }) {
       <label className="text-xs text-gray-500 block mb-1">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full bg-[#1a1a1f] border border-[#2e2e38] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500" />
+    </div>
+  )
+}
+
+function SmallAutocomplete({ label, value, onChange, placeholder, suggestions = [] }) {
+  const [show, setShow] = useState(false)
+  const filtered = suggestions.filter(s => s.toLowerCase().includes((value || '').toLowerCase()) && s.toLowerCase() !== (value || '').toLowerCase())
+  return (
+    <div className="relative">
+      <label className="text-xs text-gray-500 block mb-1">{label}</label>
+      <input type="text" value={value}
+        onChange={e => { onChange(e.target.value); setShow(true) }}
+        onFocus={() => setShow(true)}
+        onBlur={() => setTimeout(() => setShow(false), 150)}
+        placeholder={placeholder}
+        className="w-full bg-[#1a1a1f] border border-[#2e2e38] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500"
+      />
+      {show && filtered.length > 0 && (
+        <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1a1a1f] border border-[#2e2e38] rounded-lg overflow-hidden shadow-xl">
+          {filtered.map(s => (
+            <button key={s} onMouseDown={() => { onChange(s); setShow(false) }}
+              className="w-full px-3 py-2 text-left text-white text-sm hover:bg-[#2e2e38] border-b border-[#2e2e38] last:border-0">
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
