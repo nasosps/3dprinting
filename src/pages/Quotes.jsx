@@ -24,6 +24,7 @@ export default function Quotes() {
 
   const [sheet, setSheet] = useState(null)
   const [form, setForm] = useState(EMPTY)
+  const [formMaterials, setFormMaterials] = useState([])
   const [formExtras, setFormExtras] = useState([])
   const [delConfirm, setDelConfirm] = useState(null)
 
@@ -40,13 +41,14 @@ export default function Quotes() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['quotes'] }); setDelConfirm(null) },
   })
 
-  function openAdd() { setForm(EMPTY); setFormExtras([]); setSheet({ mode: 'add' }) }
+  function openAdd() { setForm(EMPTY); setFormMaterials([]); setFormExtras([]); setSheet({ mode: 'add' }) }
   function openEdit(q) {
     setForm({
       client_id: q.client_id || '', title: q.title || '', qty: q.qty ?? '', unit_price: q.unit_price ?? '',
-      template_id: q.template_id || '', material_id: q.material_id || '',
-      batch_grams: q.batch_grams ?? '', batch_mins: q.batch_mins ?? '', batch_pcs: q.batch_pcs ?? '1',
+      template_id: q.template_id || '',
+      batch_mins: q.batch_mins ?? '', batch_pcs: q.batch_pcs ?? '1',
     })
+    setFormMaterials(Array.isArray(q.materials_used) ? q.materials_used : [])
     setFormExtras(Array.isArray(q.extras_used) ? q.extras_used : [])
     setSheet({ mode: 'edit', item: q })
   }
@@ -54,8 +56,7 @@ export default function Quotes() {
   function save() {
     const qty = parseInt(form.qty) || 0
     const uprice = parseFloat(form.unit_price) || 0
-    const selectedMat = materials.find(m => String(m.id) === String(form.material_id))
-    const { unitCost } = calcUnitCost({ ...form, material: selectedMat, extras: formExtras })
+    const { unitCost } = calcUnitCost({ ...form, formMaterials, extras: formExtras })
     const data = {
       client_id: form.client_id || null,
       title: form.title,
@@ -63,10 +64,9 @@ export default function Quotes() {
       unit_price: uprice,
       total_price: uprice * qty,
       template_id: form.template_id || null,
-      material_id: form.material_id || null,
-      batch_grams: parseFloat(form.batch_grams) || 0,
       batch_mins: parseFloat(form.batch_mins) || 0,
       batch_pcs: parseInt(form.batch_pcs) || 1,
+      materials_used: formMaterials,
       extras_used: formExtras,
       cost_per_unit: unitCost,
       total_cost: unitCost * qty,
@@ -142,6 +142,7 @@ export default function Quotes() {
 
           <CostForm
             form={form} setForm={setForm}
+            formMaterials={formMaterials} setFormMaterials={setFormMaterials}
             extras={formExtras} setExtras={setFormExtras}
             models={models} materials={materials} accessories={accessories}
           />

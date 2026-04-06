@@ -21,8 +21,8 @@ function roiDot(roi) {
 function calcRoi(sell, cost) {
   return cost > 0 ? ((sell - cost) / cost) * 100 : 0
 }
-function extrasCostPerUnit(extras, bPcs) {
-  return extras.reduce((s, e) => s + (e.cost || 0), 0) / (bPcs || 1)
+function extrasCostPerUnit(extras) {
+  return extras.reduce((s, e) => s + (e.cost || 0), 0)
 }
 
 const EMPTY = { name: '', batch_pcs: '1', material_id: '', batch_grams: '', batch_mins: '', sell_price: '' }
@@ -122,7 +122,7 @@ export default function Models() {
     const matCostBatch = (bGrams / 1000) * (mat?.price || 0)
     const elecCostBatch = (bMins / 60) * ELECTRICITY_COST_PER_H
     const maintCostBatch = matCostBatch * 0.5
-    const extrasCost = extrasCostPerUnit(formExtras, bPcs)
+    const extrasCost = extrasCostPerUnit(formExtras)
     const unitCost = (matCostBatch + elecCostBatch + maintCostBatch) / bPcs + extrasCost
     const profit = sell - unitCost
     const roi = calcRoi(sell, unitCost)
@@ -151,7 +151,7 @@ export default function Models() {
           const matCostBatch = mats.reduce((s, mat) => s + (mat.grams || 0) * ((mat.price || 0) / 1000), 0)
           const elecCostBatch = (batchMins / 60) * ELECTRICITY_COST_PER_H
           const maintCostBatch = matCostBatch * 0.5
-          const extCostUnit = extrasCostPerUnit(exts, batchPcs)
+          const extCostUnit = extrasCostPerUnit(exts)
           const costPerUnit = (matCostBatch + elecCostBatch + maintCostBatch) / batchPcs + extCostUnit
           const sellPrice = m.sell_price || m.unit_price || 0
           const profitPerUnit = sellPrice - costPerUnit
@@ -233,7 +233,7 @@ export default function Models() {
 
           {accessories.length > 0 && (
             <div>
-              <label className="text-sm text-gray-400 block mb-1.5">Αξεσουάρ / Extras (ανά πλάκα)</label>
+              <label className="text-sm text-gray-400 block mb-1.5">Αξεσουάρ / Extras (ανά τεμάχιο)</label>
               <div className="flex gap-2">
                 <select value={selExtra} onChange={e => setSelExtra(e.target.value)}
                   className="flex-1 bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-3.5 text-white text-base focus:outline-none focus:border-violet-500">
@@ -254,7 +254,7 @@ export default function Models() {
                     <div key={e.id} className="flex items-center justify-between bg-[#0f0f11] border border-[#2e2e38] rounded-lg px-3 py-2.5">
                       <span className="text-base text-gray-300">{e.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">{(e.cost || 0).toFixed(2)}€/πλάκα</span>
+                        <span className="text-sm text-gray-500">{(e.cost || 0).toFixed(2)}€/τεμ.</span>
                         <button onClick={() => removeExtra(e.id)} className="text-gray-500 active:text-red-400 p-1">
                           <X size={16} />
                         </button>
