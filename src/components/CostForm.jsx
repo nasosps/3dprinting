@@ -1,5 +1,7 @@
 // Shared cost form fields: template, materials (up to 4), batch, extras, live preview
 import { useState, useMemo, useRef } from 'react'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { createMaterial } from '../lib/api/materials'
 import { Plus, X } from 'lucide-react'
 
 const ELECTRICITY_COST_PER_H = 0.75
@@ -19,12 +21,26 @@ export function calcUnitCost({ batch_mins, batch_pcs, formMaterials, extras }) {
 }
 
 export default function CostForm({ form, setForm, formMaterials, setFormMaterials, extras, setExtras, models, materials, accessories }) {
+  const qc = useQueryClient()
   const activeMats = (materials || []).filter(m => (m.current_weight || 0) > 0)
   const [matSearch, setMatSearch] = useState('')
   const [selMatGrams, setSelMatGrams] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [selMatId, setSelMatId] = useState('')
   const searchRef = useRef(null)
+  const [newMatForm, setNewMatForm] = useState(null) // null | { brand, type, color, price, spool_weight, spool_count }
+
+  const createMatMut = useMutation({
+    mutationFn: createMaterial,
+    onSuccess: (newMat) => {
+      qc.invalidateQueries({ queryKey: ['materials'] })
+      const name = [newMat.brand, newMat.type, newMat.color].filter(Boolean).join(' ')
+      setFormMaterials(prev => [...prev, { id: newMat.id, name, price: newMat.price || 0, grams: parseFloat(selMatGrams) || 0 }])
+      setNewMatForm(null)
+      setMatSearch('')
+      setSelMatGrams('')
+    },
+  })
 
   const { unitCost, matCostBatch, elecCostBatch, maintCostBatch, extrasCost, bPcs, bGrams, bMins } = useMemo(
     () => calcUnitCost({ ...form, formMaterials, extras }),
@@ -119,9 +135,18 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                   .filter(m => !formMaterials.find(fm => String(fm.id) === String(m.id)))
                   .filter(m => !q || [m.brand, m.type, m.color].join(' ').toLowerCase().includes(q))
                   .sort((a, b) => (a.current_weight || 0) - (b.current_weight || 0))
-                if (filtered.length === 0) return null
                 return (
                   <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1a1a1f] border border-[#2e2e38] rounded-xl overflow-hidden shadow-xl">
+                    {filtered.length === 0 && (
+                      <button
+                        onMouseDown={() => {
+                          setShowDropdown(false)
+                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_weight: '1000', spool_count: '1' })
+                        }}
+                        className="w-full px-4 py-3 text-left text-violet-400 text-base hover:bg-[#2e2e38]">
+                        + Νέο υλικό "{matSearch}"
+                      </button>
+                    )}
                     {filtered.slice(0, 6).map((m, i) => {
                       const name = [m.brand, m.type, m.color].filter(Boolean).join(' ')
                       const isLowest = i === 0
@@ -143,10 +168,55 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                         </button>
                       )
                     })}
+                    {filtered.length > 0 && (
+                      <button
+                        onMouseDown={() => {
+                          setShowDropdown(false)
+                          setNewMatForm({ brand: matSearch, type: '', color: '', price: '', spool_weight: '1000', spool_count: '1' })
+                        }}
+                        className="w-full px-4 py-3 text-left text-violet-400 text-sm hover:bg-[#2e2e38] border-t border-[#2e2e38]">
+                        + Νέο υλικό
+                      </button>
+                    )}
                   </div>
                 )
               })()}
             </div>
+            {/* New material inline form */}
+            {newMatForm && (
+              <div className="bg-[#0f0f11] border border-violet-800 rounded-xl p-3 space-y-3">
+                <div className="text-sm font-medium text-violet-400">Νέο Υλικό</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <NField label="Brand" value={newMatForm.brand} onChange={v => setNewMatForm(f => ({ ...f, brand: v }))} placeholder="Bambu" />
+                  <NField label="Τύπος" value={newMatForm.type} onChange={v => setNewMatForm(f => ({ ...f, type: v }))} placeholder="PLA" />
+                  <NField label="Χρώμα" value={newMatForm.color} onChange={v => setNewMatForm(f => ({ ...f, color: v }))} placeholder="Black" />
+                  <NField label="€/kg" value={newMatForm.price} onChange={v => setNewMatForm(f => ({ ...f, price: v }))} type="number" placeholder="20" />
+                  <NField label="g/καρούλι" value={newMatForm.spool_weight} onChange={v => setNewMatForm(f => ({ ...f, spool_weight: v }))} type="number" placeholder="1000" />
+                  <NField label="Αρ. καρουλιών" value={newMatForm.spool_count} onChange={v => setNewMatForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
+                </div>
+                {newMatForm.spool_weight && newMatForm.spool_count && (
+                  <div className="text-sm text-gray-400">
+                    Σύνολο: <span className="text-white font-medium">{(parseFloat(newMatForm.spool_weight) * parseInt(newMatForm.spool_count)).toFixed(0)}g</span>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button onClick={() => setNewMatForm(null)} className="flex-1 py-2 rounded-lg bg-[#2e2e38] text-gray-300 text-sm">Ακύρωση</button>
+                  <button
+                    disabled={!newMatForm.brand || createMatMut.isPending}
+                    onClick={() => {
+                      const total = (parseFloat(newMatForm.spool_weight) || 1000) * (parseInt(newMatForm.spool_count) || 1)
+                      createMatMut.mutate({
+                        brand: newMatForm.brand, type: newMatForm.type, color: newMatForm.color,
+                        price: parseFloat(newMatForm.price) || 0,
+                        initial_weight: total, current_weight: total,
+                      })
+                    }}
+                    className="flex-1 py-2 rounded-lg bg-violet-600 disabled:opacity-40 text-white text-sm">
+                    {createMatMut.isPending ? '...' : 'Αποθήκευση'}
+                  </button>
+                </div>
+              </div>
+            )}
             {/* Grams + Add */}
             <div className="flex gap-2">
               <input
@@ -273,6 +343,16 @@ function CostField({ label, value, onChange, placeholder }) {
       <label className="text-sm text-gray-400 block mb-1.5">{label}</label>
       <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-3 py-3.5 text-white text-base focus:outline-none focus:border-violet-500" />
+    </div>
+  )
+}
+
+function NField({ label, value, onChange, type = 'text', placeholder }) {
+  return (
+    <div>
+      <label className="text-xs text-gray-500 block mb-1">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="w-full bg-[#1a1a1f] border border-[#2e2e38] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500" />
     </div>
   )
 }

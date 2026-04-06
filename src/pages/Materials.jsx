@@ -4,7 +4,7 @@ import { getMaterials, createMaterial, updateMaterial, deleteMaterial } from '..
 import { AlertTriangle, Plus, Pencil, Trash2 } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 
-const EMPTY = { brand: '', type: '', color: '', price: '', initial_weight: '', current_weight: '' }
+const EMPTY = { brand: '', type: '', color: '', price: '', spool_weight: '1000', spool_count: '1', initial_weight: '', current_weight: '' }
 
 export default function Materials() {
   const qc = useQueryClient()
@@ -26,16 +26,19 @@ export default function Materials() {
 
   function openAdd() { setForm(EMPTY); setSheet({ mode: 'add' }) }
   function openEdit(m) {
-    setForm({ brand: m.brand || '', type: m.type || '', color: m.color || '', price: m.price ?? '', initial_weight: m.initial_weight ?? '', current_weight: m.current_weight ?? '' })
+    setForm({ brand: m.brand || '', type: m.type || '', color: m.color || '', price: m.price ?? '', spool_weight: '', spool_count: '', initial_weight: m.initial_weight ?? '', current_weight: m.current_weight ?? '' })
     setSheet({ mode: 'edit', item: m })
   }
 
   function save() {
+    const spoolW = parseFloat(form.spool_weight) || 0
+    const spoolC = parseInt(form.spool_count) || 1
+    const totalW = spoolW > 0 ? spoolW * spoolC : (parseFloat(form.initial_weight) || 0)
     const data = {
       brand: form.brand, type: form.type, color: form.color,
       price: parseFloat(form.price) || 0,
-      initial_weight: parseFloat(form.initial_weight) || 0,
-      current_weight: parseFloat(form.current_weight) || 0,
+      initial_weight: totalW,
+      current_weight: sheet.mode === 'edit' ? (parseFloat(form.current_weight) || 0) : totalW,
     }
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
   }
@@ -91,8 +94,24 @@ export default function Materials() {
           <Field label="Τύπος" value={form.type} onChange={v => setForm(f => ({ ...f, type: v }))} placeholder="π.χ. PLA, PETG" />
           <Field label="Χρώμα" value={form.color} onChange={v => setForm(f => ({ ...f, color: v }))} placeholder="π.χ. Black" />
           <Field label="Τιμή (€/kg)" value={form.price} onChange={v => setForm(f => ({ ...f, price: v }))} type="number" placeholder="20.00" />
-          <Field label="Αρχικό Βάρος (g)" value={form.initial_weight} onChange={v => setForm(f => ({ ...f, initial_weight: v }))} type="number" placeholder="1000" />
-          <Field label="Τρέχον Βάρος (g)" value={form.current_weight} onChange={v => setForm(f => ({ ...f, current_weight: v }))} type="number" placeholder="1000" />
+          {sheet?.mode === 'add' ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Βάρος καρουλιού (g)" value={form.spool_weight} onChange={v => setForm(f => ({ ...f, spool_weight: v }))} type="number" placeholder="1000" />
+                <Field label="Αριθμός καρουλιών" value={form.spool_count} onChange={v => setForm(f => ({ ...f, spool_count: v }))} type="number" placeholder="1" />
+              </div>
+              {form.spool_weight && form.spool_count && (
+                <div className="bg-[#0f0f11] border border-[#2e2e38] rounded-xl px-4 py-3 text-base text-gray-300">
+                  Σύνολο: <strong className="text-white">{(parseFloat(form.spool_weight) * parseInt(form.spool_count)).toFixed(0)}g</strong>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <Field label="Αρχικό Βάρος (g)" value={form.initial_weight} onChange={v => setForm(f => ({ ...f, initial_weight: v }))} type="number" placeholder="1000" />
+              <Field label="Τρέχον Βάρος (g)" value={form.current_weight} onChange={v => setForm(f => ({ ...f, current_weight: v }))} type="number" placeholder="1000" />
+            </>
+          )}
           <button onClick={save} disabled={mut.isPending}
             className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
