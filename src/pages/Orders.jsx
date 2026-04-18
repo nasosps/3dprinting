@@ -176,10 +176,13 @@ export default function Orders() {
   const [delConfirm, setDelConfirm] = useState(null)
   const [showDone, setShowDone] = useState(false)
 
+  const [saveError, setSaveError] = useState(null)
+
   const mut = useMutation({
     mutationFn: ({ mode, id, data }) =>
       mode === 'edit' ? updateOrder(id, data) : createOrder(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); setSheet(null) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); setSheet(null); setSaveError(null) },
+    onError: (err) => setSaveError(err.message || 'Σφάλμα αποθήκευσης'),
   })
 
   const delMut = useMutation({
@@ -290,6 +293,9 @@ export default function Orders() {
             </div>
           )}
 
+          {saveError && (
+            <div className="bg-red-900/30 border border-red-700 rounded-xl px-4 py-3 text-sm text-red-400">{saveError}</div>
+          )}
           <button onClick={save} disabled={mut.isPending}
             className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}

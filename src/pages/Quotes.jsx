@@ -30,10 +30,13 @@ export default function Quotes() {
 
   const customerMap = Object.fromEntries(customers.map(c => [c.id, c.name]))
 
+  const [saveError, setSaveError] = useState(null)
+
   const mut = useMutation({
     mutationFn: ({ mode, id, data }) =>
       mode === 'edit' ? updateQuote(id, data) : createQuote(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['quotes'] }); setSheet(null) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['quotes'] }); setSheet(null); setSaveError(null) },
+    onError: (err) => setSaveError(err.message || 'Σφάλμα αποθήκευσης'),
   })
 
   const delMut = useMutation({
@@ -158,6 +161,9 @@ export default function Quotes() {
             </div>
           )}
 
+          {saveError && (
+            <div className="bg-red-900/30 border border-red-700 rounded-xl px-4 py-3 text-sm text-red-400">{saveError}</div>
+          )}
           <button onClick={save} disabled={mut.isPending}
             className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-base font-medium py-3.5 rounded-xl">
             {mut.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
