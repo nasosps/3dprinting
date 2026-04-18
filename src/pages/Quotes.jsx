@@ -5,7 +5,8 @@ import { getCustomers } from '../lib/api/customers'
 import { getMaterials } from '../lib/api/materials'
 import { getAccessories } from '../lib/api/accessories'
 import { getModels } from '../lib/api/models'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { createOrder } from '../lib/api/orders'
+import { Plus, Pencil, Trash2, ArrowRightCircle } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 import CostForm, { calcUnitCost } from '../components/CostForm'
 
@@ -31,6 +32,27 @@ export default function Quotes() {
   const customerMap = Object.fromEntries(customers.map(c => [c.id, c.name]))
 
   const [saveError, setSaveError] = useState(null)
+  const [convertedId, setConvertedId] = useState(null)
+
+  const convertMut = useMutation({
+    mutationFn: (q) => createOrder({
+      client_id: q.client_id || null,
+      description: q.title || '',
+      total_pieces: q.qty || 0,
+      unit_price: q.unit_price || 0,
+      sale_price: q.total_price || 0,
+      deposit: 0,
+      template_id: q.template_id || null,
+      batch_mins: q.batch_mins || 0,
+      batch_pcs: q.batch_pcs || 1,
+      materials_used: q.materials_used || [],
+      extras_used: q.extras_used || [],
+      cost_per_unit: q.cost_per_unit || 0,
+      total_cost: q.total_cost || 0,
+      status: 'Active',
+    }),
+    onSuccess: (_, q) => { qc.invalidateQueries({ queryKey: ['orders'] }); setConvertedId(q.id) },
+  })
 
   const mut = useMutation({
     mutationFn: ({ mode, id, data }) =>
@@ -121,6 +143,13 @@ export default function Quotes() {
                       {status === 'Completed' ? 'Αποδεκτή' : 'Εκκρεμεί'}
                     </span>
                   </div>
+                  <button
+                    onClick={() => convertMut.mutate(q)}
+                    disabled={convertMut.isPending || convertedId === q.id}
+                    title="Μετατροπή σε Παραγγελία"
+                    className={`p-2 ${convertedId === q.id ? 'text-green-400' : 'text-gray-500 active:text-green-400'}`}>
+                    <ArrowRightCircle size={18} />
+                  </button>
                   <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-2"><Pencil size={18} /></button>
                   <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
                 </div>
