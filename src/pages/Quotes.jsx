@@ -174,8 +174,8 @@ export default function Quotes() {
                     onClick={() => cancelMut.mutate(q.id)}
                     disabled={cancelMut.isPending}
                     title="Ακύρωση"
-                    className="p-2 text-gray-500 active:text-red-400">
-                    <XCircle size={18} />
+                    className="p-2 text-red-500 active:text-red-300">
+                    <XCircle size={20} />
                   </button>
                   <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-2"><Pencil size={18} /></button>
                   <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
