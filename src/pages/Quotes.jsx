@@ -6,7 +6,7 @@ import { getMaterials } from '../lib/api/materials'
 import { getAccessories } from '../lib/api/accessories'
 import { getModels } from '../lib/api/models'
 import { createOrder } from '../lib/api/orders'
-import { Plus, Pencil, Trash2, ArrowRightCircle, Eye, EyeOff } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowRightCircle, Eye, EyeOff, XCircle } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 import CostForm, { calcUnitCost } from '../components/CostForm'
 
@@ -33,6 +33,11 @@ export default function Quotes() {
   const customerMap = Object.fromEntries(customers.map(c => [c.id, c.name]))
 
   const [saveError, setSaveError] = useState(null)
+
+  const cancelMut = useMutation({
+    mutationFn: (id) => updateQuote(id, { status: 'Cancelled' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['quotes'] }),
+  })
 
   const convertMut = useMutation({
     mutationFn: async (q) => {
@@ -102,8 +107,8 @@ export default function Quotes() {
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
   }
 
-  const active = quotes.filter(q => q.status !== 'Completed')
-  const done = quotes.filter(q => q.status === 'Completed')
+  const active = quotes.filter(q => q.status !== 'Completed' && q.status !== 'Cancelled')
+  const done = quotes.filter(q => q.status === 'Completed' || q.status === 'Cancelled')
 
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
@@ -165,6 +170,13 @@ export default function Quotes() {
                     className="p-2 text-gray-500 active:text-green-400">
                     <ArrowRightCircle size={18} />
                   </button>
+                  <button
+                    onClick={() => cancelMut.mutate(q.id)}
+                    disabled={cancelMut.isPending}
+                    title="Ακύρωση"
+                    className="p-2 text-gray-500 active:text-red-400">
+                    <XCircle size={18} />
+                  </button>
                   <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-2"><Pencil size={18} /></button>
                   <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
                 </div>
@@ -175,29 +187,32 @@ export default function Quotes() {
       </div>
 
       {showDone && done.length > 0 && (
-        <>
-          <h2 className="text-base font-medium text-gray-500 mt-4 mb-2">Ολοκληρωμένες</h2>
-          <div className="space-y-3 opacity-60">
-            {done.map(q => {
-              const clientName = customerMap[q.client_id] || 'Άγνωστος'
-              return (
-                <div key={q.id} className="bg-[#1a1a1f] rounded-xl p-4 border border-green-900">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-base font-medium text-white">{clientName}</div>
-                      {q.title && <div className="text-base text-gray-400 mt-0.5 truncate">{q.title}</div>}
-                      {q.qty > 0 && <div className="text-sm text-gray-500 mt-0.5">{q.qty} τεμ.</div>}
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
+        <div className="mt-4 space-y-3 opacity-60">
+          {done.map(q => {
+            const clientName = customerMap[q.client_id] || 'Άγνωστος'
+            const isCancelled = q.status === 'Cancelled'
+            return (
+              <div key={q.id} className={`bg-[#1a1a1f] rounded-xl p-4 border ${isCancelled ? 'border-red-900' : 'border-green-900'}`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-base font-medium text-white">{clientName}</div>
+                    {q.title && <div className="text-base text-gray-400 mt-0.5 truncate">{q.title}</div>}
+                    {q.qty > 0 && <div className="text-sm text-gray-500 mt-0.5">{q.qty} τεμ.</div>}
+                  </div>
+                  <div className="flex items-center gap-2 ml-2">
+                    <div className="text-right">
                       <div className="text-base font-semibold text-white">{(q.total_price || 0).toFixed(2)}€</div>
-                      <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${isCancelled ? 'text-red-400 bg-red-900/30' : 'text-green-400 bg-green-900/30'}`}>
+                        {isCancelled ? 'Ακυρωμένη' : 'Ολοκληρωμένη'}
+                      </span>
                     </div>
+                    <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </>
+              </div>
+            )
+          })}
+        </div>
       )}
 
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Προσφοράς' : 'Νέα Προσφορά'}>
