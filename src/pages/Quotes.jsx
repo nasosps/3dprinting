@@ -6,7 +6,7 @@ import { getMaterials } from '../lib/api/materials'
 import { getAccessories } from '../lib/api/accessories'
 import { getModels } from '../lib/api/models'
 import { createOrder } from '../lib/api/orders'
-import { Plus, Pencil, Trash2, ArrowRightCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowRightCircle, Eye, EyeOff } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
 import CostForm, { calcUnitCost } from '../components/CostForm'
 
@@ -24,6 +24,7 @@ export default function Quotes() {
   const { data: models = [] } = useQuery({ queryKey: ['models'], queryFn: getModels })
 
   const [sheet, setSheet] = useState(null)
+  const [showDone, setShowDone] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [formMaterials, setFormMaterials] = useState([])
   const [formExtras, setFormExtras] = useState([])
@@ -32,26 +33,28 @@ export default function Quotes() {
   const customerMap = Object.fromEntries(customers.map(c => [c.id, c.name]))
 
   const [saveError, setSaveError] = useState(null)
-  const [convertedId, setConvertedId] = useState(null)
 
   const convertMut = useMutation({
-    mutationFn: (q) => createOrder({
-      client_id: q.client_id || null,
-      description: q.title || '',
-      total_pieces: q.qty || 0,
-      unit_price: q.unit_price || 0,
-      sale_price: q.total_price || 0,
-      deposit: 0,
-      template_id: q.template_id || null,
-      batch_mins: q.batch_mins || 0,
-      batch_pcs: q.batch_pcs || 1,
-      materials_used: q.materials_used || [],
-      extras_used: q.extras_used || [],
-      cost_per_unit: q.cost_per_unit || 0,
-      total_cost: q.total_cost || 0,
-      status: 'Active',
-    }),
-    onSuccess: (_, q) => { qc.invalidateQueries({ queryKey: ['orders'] }); setConvertedId(q.id) },
+    mutationFn: async (q) => {
+      await createOrder({
+        client_id: q.client_id || null,
+        description: q.title || '',
+        total_pieces: q.qty || 0,
+        unit_price: q.unit_price || 0,
+        sale_price: q.total_price || 0,
+        deposit: 0,
+        template_id: q.template_id || null,
+        batch_mins: q.batch_mins || 0,
+        batch_pcs: q.batch_pcs || 1,
+        materials_used: q.materials_used || [],
+        extras_used: q.extras_used || [],
+        cost_per_unit: q.cost_per_unit || 0,
+        total_cost: q.total_cost || 0,
+        status: 'Active',
+      })
+      await updateQuote(q.id, { status: 'Completed' })
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); qc.invalidateQueries({ queryKey: ['quotes'] }) },
   })
 
   const mut = useMutation({
@@ -99,21 +102,33 @@ export default function Quotes() {
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
   }
 
+  const active = quotes.filter(q => q.status !== 'Completed')
+  const done = quotes.filter(q => q.status === 'Completed')
+
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
   return (
     <div className="p-4 pb-28">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold text-white">Προσφορές</h1>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
-          <Plus size={18} /> Νέα
-        </button>
+        <div className="flex items-center gap-2">
+          {done.length > 0 && (
+            <button onClick={() => setShowDone(s => !s)}
+              className="flex items-center gap-1.5 bg-[#2e2e38] text-gray-400 text-base px-3 py-2.5 rounded-xl">
+              {showDone ? <EyeOff size={17} /> : <Eye size={17} />}
+              {done.length}
+            </button>
+          )}
+          <button onClick={openAdd} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-base px-4 py-2.5 rounded-xl">
+            <Plus size={18} /> Νέα
+          </button>
+        </div>
       </div>
 
       {quotes.length === 0 && <div className="text-center text-gray-500 mt-16">Δεν υπάρχουν προσφορές</div>}
 
       <div className="space-y-3">
-        {quotes.map(q => {
+        {active.map(q => {
           const clientName = customerMap[q.client_id] || 'Άγνωστος'
           const status = q.status || 'Active'
           const costPerUnit = q.cost_per_unit || 0
@@ -145,9 +160,9 @@ export default function Quotes() {
                   </div>
                   <button
                     onClick={() => convertMut.mutate(q)}
-                    disabled={convertMut.isPending || convertedId === q.id}
+                    disabled={convertMut.isPending}
                     title="Μετατροπή σε Παραγγελία"
-                    className={`p-2 ${convertedId === q.id ? 'text-green-400' : 'text-gray-500 active:text-green-400'}`}>
+                    className="p-2 text-gray-500 active:text-green-400">
                     <ArrowRightCircle size={18} />
                   </button>
                   <button onClick={() => openEdit(q)} className="text-gray-500 active:text-white p-2"><Pencil size={18} /></button>
@@ -158,6 +173,32 @@ export default function Quotes() {
           )
         })}
       </div>
+
+      {showDone && done.length > 0 && (
+        <>
+          <h2 className="text-base font-medium text-gray-500 mt-4 mb-2">Ολοκληρωμένες</h2>
+          <div className="space-y-3 opacity-60">
+            {done.map(q => {
+              const clientName = customerMap[q.client_id] || 'Άγνωστος'
+              return (
+                <div key={q.id} className="bg-[#1a1a1f] rounded-xl p-4 border border-green-900">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-base font-medium text-white">{clientName}</div>
+                      {q.title && <div className="text-base text-gray-400 mt-0.5 truncate">{q.title}</div>}
+                      {q.qty > 0 && <div className="text-sm text-gray-500 mt-0.5">{q.qty} τεμ.</div>}
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      <div className="text-base font-semibold text-white">{(q.total_price || 0).toFixed(2)}€</div>
+                      <button onClick={() => setDelConfirm(q)} className="text-gray-500 active:text-red-400 p-2"><Trash2 size={18} /></button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet?.mode === 'edit' ? 'Επεξεργασία Προσφοράς' : 'Νέα Προσφορά'}>
         <div className="space-y-4">
