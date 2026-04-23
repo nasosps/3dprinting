@@ -3,23 +3,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { createMaterial } from '../lib/api/materials'
 import { Plus, X } from 'lucide-react'
-import AutocompleteField from './AutocompleteField'
-
-const ELECTRICITY_COST_PER_H = 0.75
-
-// formMaterials: [{ id, name, price, grams }]
-export function calcUnitCost({ batch_mins, batch_pcs, formMaterials, extras }) {
-  const bPcs = parseInt(batch_pcs) || 1
-  const bMins = parseFloat(batch_mins) || 0
-  const mats = formMaterials || []
-  const matCostBatch = mats.reduce((s, m) => s + (parseFloat(m.grams) || 0) / 1000 * (parseFloat(m.price) || 0), 0)
-  const bGrams = mats.reduce((s, m) => s + (parseFloat(m.grams) || 0), 0)
-  const elecCostBatch = (bMins / 60) * ELECTRICITY_COST_PER_H
-  const maintCostBatch = matCostBatch * 0.5
-  const extrasCost = (extras || []).reduce((s, e) => s + (e.cost || 0), 0)
-  const unitCost = (matCostBatch + elecCostBatch + maintCostBatch) / bPcs + extrasCost
-  return { unitCost, matCostBatch, elecCostBatch, maintCostBatch, extrasCost, bPcs, bGrams, bMins }
-}
+import { calcProfitAndRoi, calcSuggestedPrice, calcUnitCost } from '../lib/costing'
 
 export default function CostForm({ form, setForm, formMaterials, setFormMaterials, extras, setExtras, models, materials, accessories }) {
   const qc = useQueryClient()
@@ -43,15 +27,26 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
     },
   })
 
-  const { unitCost, matCostBatch, elecCostBatch, maintCostBatch, extrasCost, bPcs, bGrams, bMins } = useMemo(
+  const { unitCost, baseUnitCost, matCostBatch, elecCostBatch, maintCostBatch, extrasCost, bPcs, bGrams, bMins } = useMemo(
     () => calcUnitCost({ ...form, formMaterials, extras }),
     [form, formMaterials, extras]
   )
 
-  const suggestedPrice = unitCost * 2.8
+  const suggestedPrice = calcSuggestedPrice({ baseUnitCost, extrasCost })
   const sellPrice = parseFloat(form.unit_price) || 0
-  const profit = sellPrice - unitCost
-  const roi = unitCost > 0 ? (profit / unitCost) * 100 : 0
+  const { profit, roi } = calcProfitAndRoi({ sellPrice, unitCost, baseUnitCost })
+
+  function isUsingSuggestedPrice(currentPrice) {
+    return currentPrice > 0 && Math.abs(currentPrice - suggestedPrice) < 0.01
+  }
+
+  function syncPriceForExtras(nextExtras) {
+    const currentPrice = parseFloat(form.unit_price) || 0
+    if (!isUsingSuggestedPrice(currentPrice)) return
+    const { baseUnitCost: nextBaseUnitCost, extrasCost: nextExtrasCost } = calcUnitCost({ ...form, formMaterials, extras: nextExtras })
+    const nextSuggestedPrice = calcSuggestedPrice({ baseUnitCost: nextBaseUnitCost, extrasCost: nextExtrasCost })
+    setForm(f => ({ ...f, unit_price: nextSuggestedPrice.toFixed(2) }))
+  }
 
   function applyTemplate(id) {
     if (!id) { setForm(f => ({ ...f, template_id: '' })); return }
@@ -96,7 +91,9 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
     if (!selExtra) return
     const acc = accessories?.find(a => String(a.id) === String(selExtra))
     if (!acc || extras.find(e => String(e.id) === String(acc.id))) return
-    setExtras(ex => [...ex, { id: acc.id, name: acc.name, cost: acc.cost || 0 }])
+    const nextExtras = [...extras, { id: acc.id, name: acc.name, cost: acc.cost || 0 }]
+    syncPriceForExtras(nextExtras)
+    setExtras(nextExtras)
   }
 
   return (
@@ -274,7 +271,11 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
                   <span className="text-base text-gray-300">{e.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-500">{(e.cost || 0).toFixed(2)}€/τεμ.</span>
-                    <button onClick={() => setExtras(ex => ex.filter(x => String(x.id) !== String(e.id)))} className="text-gray-500 active:text-red-400 p-1">
+                    <button onClick={() => {
+                      const nextExtras = extras.filter(x => String(x.id) !== String(e.id))
+                      syncPriceForExtras(nextExtras)
+                      setExtras(nextExtras)
+                    }} className="text-gray-500 active:text-red-400 p-1">
                       <X size={16} />
                     </button>
                   </div>
@@ -318,7 +319,7 @@ export default function CostForm({ form, setForm, formMaterials, setFormMaterial
             <span className="text-white">{unitCost.toFixed(2)}€</span>
           </div>
           <div className="flex justify-between text-violet-400 font-semibold">
-            <span>Προτεινόμενη τιμή (ROI 180%)</span>
+            <span>Προτεινόμενη τιμή (ROI 180% + extras)</span>
             <span>{suggestedPrice.toFixed(2)}€</span>
           </div>
           {sellPrice > 0 && (

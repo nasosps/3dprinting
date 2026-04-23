@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getModels, createModel, updateModel, deleteModel } from '../lib/api/models'
 import { getMaterials } from '../lib/api/materials'
 import { getAccessories } from '../lib/api/accessories'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
+import { calcProfitAndRoi, calcSuggestedPrice } from '../lib/costing'
 
 const ELECTRICITY_COST_PER_H = 0.75
 
@@ -18,11 +19,8 @@ function roiDot(roi) {
   if (roi >= 50) return 'bg-yellow-400'
   return 'bg-red-400'
 }
-function calcRoi(sell, cost) {
-  return cost > 0 ? ((sell - cost) / cost) * 100 : 0
-}
 function extrasCostPerUnit(extras) {
-  return extras.reduce((s, e) => s + (e.cost || 0), 0)
+  return extras.reduce((s, e) => s + (parseFloat(e.cost) || 0), 0)
 }
 
 const EMPTY = { name: '', batch_pcs: '1', material_id: '', batch_grams: '', batch_mins: '', sell_price: '' }
@@ -81,12 +79,16 @@ export default function Models() {
     const acc = accessories.find(a => String(a.id) === String(selExtra))
     if (!acc) return
     if (formExtras.find(e => String(e.id) === String(acc.id))) return
-    setFormExtras(ex => [...ex, { id: acc.id, name: acc.name, cost: acc.cost || 0 }])
+    const nextExtras = [...formExtras, { id: acc.id, name: acc.name, cost: acc.cost || 0 }]
+    syncSellPriceForExtras(nextExtras)
+    setFormExtras(nextExtras)
     setSelExtra('')
   }
 
   function removeExtra(id) {
-    setFormExtras(ex => ex.filter(e => String(e.id) !== String(id)))
+    const nextExtras = formExtras.filter(e => String(e.id) !== String(id))
+    syncSellPriceForExtras(nextExtras)
+    setFormExtras(nextExtras)
   }
 
   function save() {
@@ -113,7 +115,7 @@ export default function Models() {
     mut.mutate(sheet.mode === 'edit' ? { mode: 'edit', id: sheet.item.id, data } : { mode: 'add', data })
   }
 
-  const preview = useMemo(() => {
+  const preview = (() => {
     const bPcs = parseInt(form.batch_pcs) || 1
     const bGrams = parseFloat(form.batch_grams) || 0
     const bMins = parseFloat(form.batch_mins) || 0
@@ -123,11 +125,24 @@ export default function Models() {
     const elecCostBatch = (bMins / 60) * ELECTRICITY_COST_PER_H
     const maintCostBatch = matCostBatch * 0.5
     const extrasCost = extrasCostPerUnit(formExtras)
-    const unitCost = (matCostBatch + elecCostBatch + maintCostBatch) / bPcs + extrasCost
-    const profit = sell - unitCost
-    const roi = calcRoi(sell, unitCost)
-    return { matCostBatch, elecCostBatch, maintCostBatch, extrasCost, unitCost, profit, roi, bPcs, bGrams, bMins, sell }
-  }, [form, materials, formExtras])
+    const baseUnitCost = (matCostBatch + elecCostBatch + maintCostBatch) / bPcs
+    const unitCost = baseUnitCost + extrasCost
+    const { profit, roi } = calcProfitAndRoi({ sellPrice: sell, unitCost, baseUnitCost })
+    return { matCostBatch, elecCostBatch, maintCostBatch, extrasCost, baseUnitCost, unitCost, profit, roi, bPcs, bGrams, bMins, sell }
+  })()
+
+  function isUsingSuggestedPrice(currentPrice) {
+    const currentSuggestedPrice = calcSuggestedPrice({ baseUnitCost: preview.baseUnitCost, extrasCost: preview.extrasCost })
+    return currentPrice > 0 && Math.abs(currentPrice - currentSuggestedPrice) < 0.01
+  }
+
+  function syncSellPriceForExtras(nextExtras) {
+    const currentPrice = parseFloat(form.sell_price) || 0
+    if (!isUsingSuggestedPrice(currentPrice)) return
+    const nextExtrasCost = extrasCostPerUnit(nextExtras)
+    const nextSuggestedPrice = calcSuggestedPrice({ baseUnitCost: preview.baseUnitCost, extrasCost: nextExtrasCost })
+    setForm(f => ({ ...f, sell_price: nextSuggestedPrice.toFixed(2) }))
+  }
 
   if (isLoading) return <div className="p-4 text-gray-500">Φόρτωση...</div>
 
@@ -152,10 +167,10 @@ export default function Models() {
           const elecCostBatch = (batchMins / 60) * ELECTRICITY_COST_PER_H
           const maintCostBatch = matCostBatch * 0.5
           const extCostUnit = extrasCostPerUnit(exts)
-          const costPerUnit = (matCostBatch + elecCostBatch + maintCostBatch) / batchPcs + extCostUnit
+          const baseCostPerUnit = (matCostBatch + elecCostBatch + maintCostBatch) / batchPcs
+          const costPerUnit = baseCostPerUnit + extCostUnit
           const sellPrice = m.sell_price || m.unit_price || 0
-          const profitPerUnit = sellPrice - costPerUnit
-          const roi = calcRoi(sellPrice, costPerUnit)
+          const { profit: profitPerUnit, roi } = calcProfitAndRoi({ sellPrice, unitCost: costPerUnit, baseUnitCost: baseCostPerUnit })
           const unitGrams = mats.reduce((s, mat) => s + (mat.grams || 0), 0) / batchPcs || m.weight_g || 0
           const matNames = mats.map(mat => mat.name).filter(Boolean).join(', ')
           const extNames = exts.map(e => e.name).filter(Boolean).join(', ')
@@ -313,8 +328,8 @@ export default function Models() {
               )}
               {preview.unitCost > 0 && (
                 <div className="flex justify-between border-t border-[#2e2e38] pt-1.5 text-violet-400 font-semibold">
-                  <span>Προτεινόμενη τιμή (ROI 180%)</span>
-                  <span>{(preview.unitCost * 2.8).toFixed(2)}€</span>
+                  <span>Προτεινόμενη τιμή (ROI 180% + extras)</span>
+                  <span>{calcSuggestedPrice({ baseUnitCost: preview.baseUnitCost, extrasCost: preview.extrasCost }).toFixed(2)}€</span>
                 </div>
               )}
               {preview.sell > 0 && !form.material_id && (

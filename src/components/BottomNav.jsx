@@ -1,3 +1,4 @@
+import { createElement } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Home, ShoppingCart, FileText, Package, Users, Layers, Wrench } from 'lucide-react'
 
@@ -15,7 +16,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1f] border-t border-[#2e2e38] z-50">
       <div className="flex w-full">
-        {tabs.map(({ to, icon: Icon, label }) => (
+        {tabs.map(({ to, icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -26,7 +27,7 @@ export default function BottomNav() {
               }`
             }
           >
-            <Icon size={22} strokeWidth={1.5} />
+            {createElement(icon, { size: 22, strokeWidth: 1.5 })}
             <span className="text-[11px] leading-tight text-center">{label}</span>
           </NavLink>
         ))}

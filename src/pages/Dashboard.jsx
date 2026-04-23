@@ -1,9 +1,29 @@
-import { useState } from 'react'
+import { createElement, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getOrders } from '../lib/api/orders'
 import { getQuotes } from '../lib/api/quotes'
 import { ShoppingCart, FileText, TrendingUp, Clock } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
+import { calcUnitCost } from '../lib/costing'
+
+function getRoiCostPerUnit(item) {
+  const qty = item.total_pieces || item.qty || 0
+  const storedCostPerUnit = item.cost_per_unit || (qty > 0 ? (item.total_cost || 0) / qty : 0)
+  const extras = Array.isArray(item.extras_used) ? item.extras_used : []
+  const materials = Array.isArray(item.materials_used) ? item.materials_used : []
+  const { baseUnitCost, extrasCost } = calcUnitCost({
+    batch_mins: item.batch_mins,
+    batch_pcs: item.batch_pcs,
+    formMaterials: materials,
+    extras,
+  })
+  return baseUnitCost > 0 ? baseUnitCost : Math.max(0, storedCostPerUnit - extrasCost)
+}
+
+function getRoiCostTotal(item) {
+  const qty = item.total_pieces || item.qty || 0
+  return qty > 0 ? getRoiCostPerUnit(item) * qty : getRoiCostPerUnit(item)
+}
 
 export default function Dashboard() {
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: getOrders })
@@ -16,7 +36,8 @@ export default function Dashboard() {
   const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.sale_price || 0), 0)
   const totalCost    = completedOrders.reduce((sum, o) => sum + (o.total_cost || 0), 0)
   const totalProfit  = totalRevenue - totalCost
-  const roi          = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0
+  const totalRoiCost = completedOrders.reduce((sum, o) => sum + getRoiCostTotal(o), 0)
+  const roi          = totalRoiCost > 0 ? (totalProfit / totalRoiCost) * 100 : 0
 
   const stats = [
     { label: 'Ενεργές Παραγγελίες', value: activeOrders.length, icon: ShoppingCart, color: 'text-violet-400', onClick: null },
@@ -30,11 +51,11 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold text-white mb-4">Dashboard</h1>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        {stats.map(({ label, value, icon: Icon, color, onClick }) => (
+        {stats.map(({ label, value, icon, color, onClick }) => (
           <div key={label}
             onClick={onClick || undefined}
             className={`bg-[#1a1a1f] rounded-xl p-4 border border-[#2e2e38] ${onClick ? 'active:bg-[#2e2e38] cursor-pointer' : ''}`}>
-            <Icon size={24} className={`${color} mb-2`} strokeWidth={1.5} />
+            {createElement(icon, { size: 24, className: `${color} mb-2`, strokeWidth: 1.5 })}
             <div className="text-3xl font-bold text-white">{value}</div>
             <div className="text-sm text-gray-500 mt-0.5">{label}</div>
             {onClick && <div className="text-sm text-green-600 mt-1">πάτα για ανάλυση →</div>}
@@ -74,7 +95,7 @@ export default function Dashboard() {
             color={totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}
           />
           <StatBox
-            label="ROI (κέρδος/κόστος)"
+            label="ROI εκτύπωσης"
             value={`${Math.round(roi)}%`}
             color={roi >= 100 ? 'text-green-400' : roi >= 50 ? 'text-yellow-400' : 'text-red-400'}
           />
@@ -100,7 +121,8 @@ export default function Dashboard() {
             const cost = o.total_cost || 0
             const profit = sale - cost
             const qty = o.total_pieces || 1
-            const roi = cost > 0 ? (profit / cost) * 100 : 0
+            const roiCost = getRoiCostTotal(o)
+            const roi = roiCost > 0 ? (profit / roiCost) * 100 : 0
             const balance = sale - (o.deposit || 0)
             return (
               <div key={o.id} className="bg-[#0f0f11] rounded-xl p-3 border border-[#2e2e38]">

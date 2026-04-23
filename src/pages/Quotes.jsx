@@ -8,11 +8,24 @@ import { getModels } from '../lib/api/models'
 import { createOrder } from '../lib/api/orders'
 import { Plus, Pencil, Trash2, ArrowRightCircle, Eye, EyeOff, XCircle } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
-import CostForm, { calcUnitCost } from '../components/CostForm'
+import CostForm from '../components/CostForm'
+import { calcProfitAndRoi, calcUnitCost } from '../lib/costing'
 
 const EMPTY = {
   client_id: '', title: '', qty: '', unit_price: '',
   template_id: '', material_id: '', batch_grams: '', batch_mins: '', batch_pcs: '1',
+}
+
+function getRoiCostPerUnit(item) {
+  const extras = Array.isArray(item.extras_used) ? item.extras_used : []
+  const materials = Array.isArray(item.materials_used) ? item.materials_used : []
+  const { baseUnitCost, extrasCost } = calcUnitCost({
+    batch_mins: item.batch_mins,
+    batch_pcs: item.batch_pcs,
+    formMaterials: materials,
+    extras,
+  })
+  return baseUnitCost > 0 ? baseUnitCost : Math.max(0, (item.cost_per_unit || 0) - extrasCost)
 }
 
 export default function Quotes() {
@@ -138,8 +151,7 @@ export default function Quotes() {
           const status = q.status || 'Active'
           const costPerUnit = q.cost_per_unit || 0
           const uprice = q.unit_price || 0
-          const profit = uprice - costPerUnit
-          const roi = costPerUnit > 0 ? (profit / costPerUnit) * 100 : 0
+          const { profit, roi } = calcProfitAndRoi({ sellPrice: uprice, unitCost: costPerUnit, baseUnitCost: getRoiCostPerUnit(q) })
           return (
             <div key={q.id} className="bg-[#1a1a1f] rounded-xl p-4 border border-[#2e2e38]">
               <div className="flex items-start justify-between">

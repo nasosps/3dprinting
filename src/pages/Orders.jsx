@@ -10,11 +10,24 @@ import { updateMaterial } from '../lib/api/materials'
 import { supabase } from '../lib/supabase'
 import { Minus, Plus, CheckCircle, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import BottomSheet from '../components/BottomSheet'
-import CostForm, { calcUnitCost } from '../components/CostForm'
+import CostForm from '../components/CostForm'
+import { calcProfitAndRoi, calcUnitCost } from '../lib/costing'
 
 const EMPTY = {
   client_id: '', description: '', total_pieces: '', unit_price: '', deposit: '',
   template_id: '', material_id: '', batch_grams: '', batch_mins: '', batch_pcs: '1',
+}
+
+function getRoiCostPerUnit(item) {
+  const extras = Array.isArray(item.extras_used) ? item.extras_used : []
+  const materials = Array.isArray(item.materials_used) ? item.materials_used : []
+  const { baseUnitCost, extrasCost } = calcUnitCost({
+    batch_mins: item.batch_mins,
+    batch_pcs: item.batch_pcs,
+    formMaterials: materials,
+    extras,
+  })
+  return baseUnitCost > 0 ? baseUnitCost : Math.max(0, (item.cost_per_unit || 0) - extrasCost)
 }
 
 function OrderCard({ order, onEdit, onDelete }) {
@@ -80,8 +93,7 @@ function OrderCard({ order, onEdit, onDelete }) {
 
   const costPerUnit = order.cost_per_unit || 0
   const uprice = order.sale_price && total > 0 ? (order.sale_price / total) : (order.unit_price || 0)
-  const profit = uprice - costPerUnit
-  const roi = costPerUnit > 0 ? (profit / costPerUnit) * 100 : 0
+  const { roi } = calcProfitAndRoi({ sellPrice: uprice, unitCost: costPerUnit, baseUnitCost: getRoiCostPerUnit(order) })
 
   return (
     <div className={`bg-[#1a1a1f] rounded-xl p-4 border ${isComplete ? 'border-green-800' : 'border-[#2e2e38]'}`}>
